@@ -64,17 +64,28 @@ function Join_lounge() {
       currentDate?.getTime() + data?.chatCycle * 60000
     );
     setconnectiontime(connection.getHours() +":"+connection.getMinutes() )
+    console.log(data)
     // setconnectiontime(JSON.stringify(connection)?.split("T")[1]?.slice(0, 5));
   }, [data]);
   const icebreakerVote =async (status,index)=>{
-    const res =await  voteicebreakers(data._id,status)
-    var value = data
+    const user = JSON.parse(localStorage.getItem("user"))._id
     
-    value.icebreakers[index] = res
-    console.log(res)
-    // setdata(value)
+    const value = data
+    const res =await voteicebreakers(data._id,status)
+    if(status == true){
+      value?.icebreakers[index].upVotes.push(user)
+      value?.icebreakers[index].downVotes.remove(user)
+    }else{
+      value?.icebreakers[index]?.upVotes?.splice(value?.icebreakers[index]?.upVotes.indexOf(user),1)
+      value?.icebreakers[index]?.downVotes?.push(user)
+    }    
+    console.log(value.icebreakers)
+    setdata(value)
+    
+    
+    
   }
-  console.log(data)
+  
   
   return (
     <section className="join-lounge">

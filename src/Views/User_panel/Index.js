@@ -13,8 +13,8 @@ function User_panel() {
   const getLounges = async () => {
     const data = await getAlllounges(1);
     
-    setlounges(data.openLounges);
-    setsortedlounges(data.openLounges.sort(function(a, b) {
+    setlounges(data?.openLounges);
+    setsortedlounges(data?.openLounges?.sort(function(a, b) {
         var textA = a.name.toUpperCase();
         var textB = b.name.toUpperCase();
         return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
@@ -46,7 +46,7 @@ function User_panel() {
             <p>Ordered by date</p>
           </Col>
           <div className="lounge-cards">
-            {lounges.map((item, index) => {
+            {lounges?.map((item, index) => {
               const month = [
                 "January",
                 "February",
@@ -165,7 +165,7 @@ function User_panel() {
           </Col>
   
           <div className="communities-card">
-          {sortedlounges.map((item,index)=>{
+          {sortedlounges?.map((item,index)=>{
             return (
                 <div className="communities-content">
               <Row>
@@ -176,7 +176,7 @@ function User_panel() {
                 <Col md={6} className="t-right">
                   <span class="sc-fubCfw dQkfXx">
                     <span title="2 Guests" class="sc-pFZIQ fxgwrN">
-                      {item.guests.length}
+                      {item?.guests?.length}
                     </span>{" "}
                     Guests
                   </span>
