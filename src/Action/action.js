@@ -11,8 +11,12 @@ export const updateuser = async (data) => {
           "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
       },
     };
-    const response = await axios.patch(`${baseURL}/users/updateMe`, data, header);
-localStorage.setItem('user',JSON.stringify(response.data.user))
+    const response = await axios.patch(
+      `${baseURL}/users/updateMe`,
+      data,
+      header
+    );
+    localStorage.setItem("user", JSON.stringify(response.data.user));
     return response.data;
   } catch (err) {
     return err.message;
@@ -57,12 +61,12 @@ export const getIntroduction = async (status, page) => {
 };
 
 ///icebreakers
-export const voteicebreakers = async (id,status) => {
+export const voteicebreakers = async (id, status) => {
   try {
     const data = {
-      "id":id,
-      "vote": status
-    }
+      id: id,
+      vote: status,
+    };
     const header = {
       headers: {
         Authorization:
@@ -75,9 +79,8 @@ export const voteicebreakers = async (id,status) => {
       JSON.stringify(data),
       header
     );
-console.log(response)
-   return response.data
-
+    console.log(response);
+    return response.data;
   } catch (err) {
     return err.message;
   }
@@ -90,11 +93,7 @@ export const getIcebreakers = async (status, page) => {
           "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
       },
     };
-    const response = await axios.get(
-      `${baseURL}/icebreakers/`,
-      {},
-      header
-    );
+    const response = await axios.get(`${baseURL}/icebreakers/`, {}, header);
 
     return response.data;
   } catch (err) {
@@ -221,14 +220,13 @@ export const createbulkintroduction = async (data) => {
 ///Lounges
 export const getAlllounges = async (page) => {
   try {
-    
     const header = {
       headers: {
         Authorization:
           "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
-      },  
+      },
     };
-    
+
     const response = await axios.get(
       `${baseURL}/lounges?page=${page}&limit=10`,
       header,
@@ -246,26 +244,21 @@ export const getAlllounges = async (page) => {
 };
 export const getSinglelounges = async (id) => {
   try {
-    
     const header = {
       headers: {
         Authorization:
           "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
-      },  
+      },
     };
-    
-    const response = await axios.get(
-      `${baseURL}/lounges/${id}`,
-      header,
-      {}
-    );
-return response.data
+
+    const response = await axios.get(`${baseURL}/lounges/${id}`, header, {});
+    return response.data;
   } catch (err) {
     return err.message;
   }
 };
-export const joinchat = async (id)=>{
-  try{
+export const joinchat = async (id) => {
+  try {
     const header = {
       headers: {
         Authorization:
@@ -274,45 +267,43 @@ export const joinchat = async (id)=>{
     };
     const response = await axios.post(
       `${baseURL}/lounges/joinChat`,
-      {lounge:id},
+      { lounge: id },
       header
     );
-console.log(response)
+    console.log(response);
     if (response.data._id) {
-      
       return true;
     } else {
       return false;
     }
-
-  }catch(err) {
+  } catch (err) {
     return err.message;
   }
-}
+};
 
-export const leavechat = async (id)=>{
-  try{const header = {
-    headers: {
-      Authorization:
-        "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
-    },
-  };
-  const response = await axios.post(
-    `${baseURL}/lounges/joinChat`,
-    {lounge:id},
-    header
-  );
+export const leavechat = async (id) => {
+  try {
+    const header = {
+      headers: {
+        Authorization:
+          "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
+      },
+    };
+    const response = await axios.post(
+      `${baseURL}/lounges/joinChat`,
+      { lounge: id },
+      header
+    );
 
-  if (response.data._id) {
-    
-    return true;
-  } else {
-    return false;
-  }
-}catch(err) {
+    if (response.data._id) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (err) {
     return err.message;
   }
-}
+};
 export const updateLounge = async (id, payload) => {
   try {
     const header = {
@@ -394,7 +385,6 @@ export const createLounge = async (data) => {
   const response = await axios.post(`${baseURL}/lounges`, data, header);
   return response.data;
 
-  
   // const res = await updateloungeimages(response.data?._id, imgdata);
   // if(response.data.status==="fail" || response.data.error){
   //   Toast.error(response.data.message[0])
