@@ -63,6 +63,7 @@ export const getIntroduction = async (status, page) => {
 ///icebreakers
 export const voteicebreakers = async (id, status) => {
   try {
+    
     const data = {
       id: id,
       vote: status,
@@ -78,8 +79,10 @@ export const voteicebreakers = async (id, status) => {
       `${baseURL}/icebreakers/vote`,
       JSON.stringify(data),
       header
-    );
-    console.log(response);
+      );
+
+      
+    
     return response.data;
   } catch (err) {
     return err.message;
@@ -220,6 +223,7 @@ export const createbulkintroduction = async (data) => {
 ///Lounges
 export const getAlllounges = async (page) => {
   try {
+    
     const header = {
       headers: {
         Authorization:
@@ -270,7 +274,7 @@ export const joinchat = async (id) => {
       { lounge: id },
       header
     );
-    console.log(response);
+    
     if (response.data._id) {
       return true;
     } else {
@@ -407,7 +411,7 @@ export const login = async (paylaod) => {
     };
     const response = await axios.post(`${baseURL}/auth/login`, paylaod, header);
 
-    if (!response.data.error) {
+    if (response.data.status == "success") {
       localStorage.setItem("user", JSON.stringify(response.data?.data?.user));
       localStorage.setItem(
         "AccessToken",
@@ -446,7 +450,23 @@ export const createAdmin = async (data) => {
     return err.message;
   }
 };
+export const joinmeeting =async(user_id,id)=>{
+  const header = {
+    headers: {
+      Authorization:
+        "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
+    },
+    "Content-Type": "application/json",
+  };
 
+  const response = await axios.post(`${baseURL}/chime/join`,JOSN.stringify({
+    "meetingId":id,
+    "userId":user_id
+  }), header);
+  console.log(response)
+  return response
+
+}
 export const logout = async () => {
   const header = {
     headers: {

@@ -7,7 +7,6 @@ import axios from "axios";
 import { login } from "../../Action/action";
 import { Rings } from "react-loader-spinner";
 
-
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +15,7 @@ function Login() {
   const navigate = useNavigate();
   const userLogin = async (e) => {
     e.preventDefault();
-    setloading(true)
+    setloading(true);
     // alert('submit')
     const userData = {
       email: email,
@@ -26,15 +25,22 @@ function Login() {
     const res = await login(userData);
 
     
-
-    if (res) {navigate("/User_panel")}
+    if (res == true) {
+      navigate("/User_panel");
+    } else {
+      
+      const e = document.getElementsByClassName("loginemail");
+      e.setAttribute("class", "error");
+      const p = document.getElementsByClassName("loginpassword");
+      p.setAttribute("class", "error");
+    }
 
     // const header ={headers: {
     //     'Content-Type': 'application/json'
     //   }}
     // await axios.post('https://thirty-friends.herokuapp.com/api/v1/auth/login',JSON.stringify(userData),header)
     // .then((response) => {
-    
+
     //     window.userData = response.data.data;
     //     navigate('/User_panel');
 
@@ -57,6 +63,7 @@ function Login() {
           <Form.Control
             type="text"
             placeholder="Email adress"
+            className="loginemail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -64,6 +71,7 @@ function Login() {
             type="password"
             placeholder="Password"
             value={password}
+            className="loginpassword"
             onChange={(e) => setPassword(e.target.value)}
           />
           <a href="">Forgot Password?</a>
@@ -78,10 +86,9 @@ function Login() {
                 ariaLabel="loading"
               />
             ) : (
-            <button type="submit" className="cont">
-              Continue
-            </button>
-              
+              <button type="submit" className="cont">
+                Continue
+              </button>
             )}
           </Col>
           <Col md={12}>

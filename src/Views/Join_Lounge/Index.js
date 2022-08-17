@@ -1,28 +1,112 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Container, Row, Col, InputGroup, Form, Button } from "react-bootstrap";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { solid, brands } from '@fortawesome/fontawesome-svg-core/import.macro';
 import fav_tag from "../../Assets/fav-tag.PNG";
 import chaticon from "../../Assets/chat.png";
 import hand from "../../Assets/hand.png";
-
+import Carousel from "carousel-react-rcdev";
 import tf_ad from "../../Assets/tf-ad.png";
-import { useEffect, useState } from "react";
-import { getSinglelounges, joinchat, voteicebreakers } from "../../Action/action";
+import { useEffect, useRef, useState } from "react";
+import image from "../../Assets/default.png";
+import {
+  getSinglelounges,
+  joinchat,
+  joinmeeting,
+  voteicebreakers,
+} from "../../Action/action";
 import { imageURL } from "../../Action/config";
+import { useMeetingManager } from "amazon-chime-sdk-component-library-react";
+import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
+import { ThemeProvider } from "styled-components";
+// import { SdkPrimaryMeetingJoinAckFrame } from "amazon-chime-sdk-js/build/signalingprotocol/SignalingProtocol";
+
+const MyMeetingView = () => {
+  <VideoTileGrid />;
+};
 function Join_lounge() {
   const location = useLocation();
-  useEffect(async () => {
-    const loungedata = await getSinglelounges(location.pathname.split("/")[2]);
-
-    setdata(loungedata);
-  }, []);
+  const navigate = useNavigate();
   const [data, setdata] = useState();
   const [date, setdate] = useState("");
   const [month, setmonth] = useState("");
   const [start, setstart] = useState("");
   const [end, setend] = useState("");
-  const [connectiontime, setconnectiontime] = useState("");
+  const [timer, setTimer] = useState("00:00");
+  const [checkforchat, setcheckforchat] = useState(false);
+
+  // const [connectiontime, setconnectiontime] = useState("");
+  const Ref = useRef(null);
+
+  useEffect(async () => {
+    const loungedata = await getSinglelounges(location.pathname.split("/")[2]);
+    setdata(loungedata);
+    clearTimer(loungedata?.chatCycle * 60);
+  }, []);
+
+  const getTimeRemaining = (e) => {
+    const total = Date.parse(e) - Date.parse(new Date());
+
+    const seconds = Math.floor((total / 1000) % 60);
+    const minutes = Math.floor((total / 1000 / 60) % 60);
+    const hours = Math.floor((total / 1000 / 60 / 60) % 24);
+    return {
+      total,
+      hours,
+      minutes,
+      seconds,
+    };
+  };
+
+  const startTimer = async (e) => {
+    let { total, hours, minutes, seconds } = getTimeRemaining(e);
+    if (total >= 0) {
+      setTimer(
+        (hours > 9 ? hours : "0" + hours) +
+          ":" +
+          (minutes > 9 ? minutes : "0" + minutes) +
+          ":" +
+          (seconds > 9 ? seconds : "0" + seconds)
+      );
+    }
+  };
+  const clearTimer = (e) => {
+    // If you adjust it you should also need to
+    // adjust the Endtime formula we are about
+    // to code next
+    if (e != undefined) {
+      const hour = e > 60 ? parseInt(e / 60) : "00";
+
+      const minute = e < 60 ? e : e - parseInt(e / 60) * 60;
+      const second = "00";
+
+      setTimer(hour + ":" + minute + ":" + second);
+
+      // If you try to remove this line the
+      // updating of timer Variable will be
+      // after 1000ms or 1sec
+      // if (Ref.current) clearInterval(Ref.current);
+      const id = setInterval(() => {
+        startTimer(e);
+      }, 1000);
+      Ref.current = id;
+    }
+  };
+
+  const getDeadTime = () => {
+    let deadline = new Date();
+
+    // This is where you need to adjust if
+    // you entend to add more time
+    deadline.setSeconds(deadline.getSeconds() + 10);
+    return deadline;
+  };
+
+  // We can use useEffect so that when the component
+  // mount the timer will start as soon as possible
+
+  // We put empty array to act as componentDid
+  // mount only
 
   useEffect(() => {
     const d = new Date(data?.scheduling.scheduleDate.split("T")[0]);
@@ -63,30 +147,55 @@ function Join_lounge() {
     const connection = new Date(
       currentDate?.getTime() + data?.chatCycle * 60000
     );
-    setconnectiontime(connection.getHours() +":"+connection.getMinutes() )
-    console.log(data)
+
+    console.log(data);
+    // setconnectiontime(connection.getHours() +":"+connection.getMinutes() )
+
     // setconnectiontime(JSON.stringify(connection)?.split("T")[1]?.slice(0, 5));
   }, [data]);
-  const icebreakerVote =async (status,index)=>{
-    const user = JSON.parse(localStorage.getItem("user"))._id
-    
-    const value = data
-    const res =await voteicebreakers(data._id,status)
-    if(status == true){
-      value?.icebreakers[index].upVotes.push(user)
-      value?.icebreakers[index].downVotes.remove(user)
-    }else{
-      value?.icebreakers[index]?.upVotes?.splice(value?.icebreakers[index]?.upVotes.indexOf(user),1)
-      value?.icebreakers[index]?.downVotes?.push(user)
-    }    
-    console.log(value.icebreakers)
-    setdata(value)
-    
-    
-    
-  }
-  
-  
+
+  const icebreakerVote = async (status, index) => {
+    const user = JSON.parse(localStorage.getItem("user"))._id;
+
+    const value = data;
+    const res = await voteicebreakers(data._id, status);
+
+    if (status == true) {
+      value?.icebreakers[index].upVotes.push(user);
+      value?.icebreakers[index].downVotes.splice(
+        value?.icebreakers[index]?.downVotes.indexOf(user),
+        1
+      );
+    } else {
+      value?.icebreakers[index]?.upVotes?.splice(
+        value?.icebreakers[index]?.upVotes.indexOf(user),
+        1
+      );
+      value?.icebreakers[index]?.downVotes?.push(user);
+    }
+
+    setdata(value);
+  };
+  const meetingjoin = async (id) => {
+    // const meetingManager = useMeetingManager();
+    const res = await joinmeeting(
+      JSON.parse(localStorage.getItem("user"))?._id,
+      id
+    );
+    const data = await res.json();
+    const meetingSessionConfiguration = new MeetingSessionConfiguration(
+      data.Meeting,
+      data.Attendee
+    );
+
+    // Create a `MeetingSession` using `join()` function with the `MeetingSessionConfiguration`
+    await meetingManager.join(meetingSessionConfiguration);
+
+    // Start the `MeetingSession` to join the meeting
+    await meetingManager.start();
+
+    MyMeetingView();
+  };
   return (
     <section className="join-lounge">
       <Container>
@@ -99,7 +208,10 @@ function Join_lounge() {
       <Container className="px-0">
         <Row>
           <Col md={8}>
-            <div className="lounge-dash eElQyU" style={{backgroundImage :  `url(imageURL+ data?.banner )`}}>
+            <div
+              className="lounge-dash eElQyU"
+              style={{ backgroundImage: `url(imageURL+ data?.banner )` }}
+            >
               <div class="sc-gVgnHT bfDGHw">
                 <div class="sc-iqHYGH hSaKRS sc-fWPcDo cgpajZ">
                   <div>
@@ -165,6 +277,7 @@ function Join_lounge() {
                     <button
                       class="sc-eCssSg bnCIin sc-irlOZD jUdyne"
                       color="red"
+                      onClick={() => navigate("/User_panel")}
                     >
                       Leave Lounge
                     </button>
@@ -203,7 +316,7 @@ function Join_lounge() {
                         next connection:
                       </p>
                       <div class="sc-XhUPp kiNLFp">
-                        {connectiontime?connectiontime : " "}
+                        {timer}
                         <span class="sc-ikPAkQ ceimHt">
                           {/* 4<span class="sc-crrsfI iDhzRL"> minutes and</span>
                           <span aria-hidden="true">:</span>48
@@ -225,12 +338,56 @@ function Join_lounge() {
                   >
                     Join next chat
                   </button>
-                  <button class="sc-eCssSg bnCIin sc-jXktwP hdiogm" color="red">
+                  <button
+                    class="sc-eCssSg bnCIin sc-jXktwP hdiogm"
+                    color="red"
+                    onClick={() => setcheckforchat(!checkforchat)}
+                  >
                     Check for current chats
                   </button>
                 </div>
               </div>
             </div>
+            {checkforchat ? (
+              <Carousel>
+                {data?.rooms?.map((item) => {
+                  return (
+                    <div className="room">
+                      {item?.guests[0]?.photo ? (
+                        <img src={imageURL + item.guests[0].photo} />
+                      ) : (
+                        <img src={image} />
+                      )}
+                      <p>capacity:{" " + item.maxGuests}</p>
+                      {item?.status == "open" ? (
+                        <div>
+                          <span
+                            className="statuscolor"
+                            style={{ backgroundColor: "#52ec7d" }}
+                          ></span>
+                          <span
+                            className="joinmeeting"
+                            onClick={() => {
+                              meetingjoin(id);
+                            }}
+                          >
+                            join room
+                          </span>
+                        </div>
+                      ) : (
+                        <div>
+                          <span
+                            className="statuscolor"
+                            style={{ backgroundColor: "#5552ec" }}
+                          ></span>
+                          <span className="await">Awaiting</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </Carousel>
+            ) : null}
             {/* lounge persons  */}
             <div class="sc-iBPRYJ yXCYH sc-fxNNfJ dcHbyY">
               <div class="sc-dwcuIR jktQCG">
@@ -244,79 +401,41 @@ function Join_lounge() {
                 </span>
               </div>
               <div class="sc-gYhigD gdlclw">
-              {/* {data?.guests?.map((item))} */}
-                <div
-                  role="button"
-                  tabindex="0"
-                  title="Austin, open sidebar profile"
-                  aria-label="Austin, open sidebar profile"
-                  class="sc-bGqQkm jyZRYv"
-                >
-                  <div class="sc-biBrSq rrVpB">
-                    <span
-                      class="sc-GTWni dHVACP sc-eHfQar hhRQON"
-                      height="50"
-                      width="50"
-                      aria-hidden="true"
-                    >
-                      <svg
-                        class=""
-                        fill="#495057"
-                        width="50px"
-                        height="50px"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-                      </svg>
-                    </span>
-                    <span class="sc-hzMMCg kKpKzb">
-                      <small>Austin</small>
-                    </span>
-                    <span class="sc-crrsfI iDhzRL">Austin</span>
+                {data?.guests?.map((item) => {
+                  return (
                     <div
-                      width="8"
-                      class="sc-tYoTV rcpjK"
-                      aria-label="Green status indicator"
-                    ></div>
-                  </div>
-                </div>
-                <div
-                  role="button"
-                  tabindex="0"
-                  title="Austin, open sidebar profile"
-                  aria-label="Austin, open sidebar profile"
-                  class="sc-bGqQkm jyZRYv"
-                >
-                  <div class="sc-biBrSq rrVpB">
-                    <span
-                      class="sc-GTWni dHVACP sc-eHfQar hhRQON"
-                      height="50"
-                      width="50"
-                      aria-hidden="true"
+                      role="button"
+                      tabindex="0"
+                      title="Austin, open sidebar profile"
+                      aria-label="Austin, open sidebar profile"
+                      class="sc-bGqQkm jyZRYv"
                     >
-                      <svg
-                        class=""
-                        fill="#495057"
-                        width="50px"
-                        height="50px"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M0 0h24v24H0z" fill="none"></path>
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
-                      </svg>
-                    </span>
-                    <span class="sc-hzMMCg kKpKzb">
-                      <small>Austin</small>
-                    </span>
-                    <span class="sc-crrsfI iDhzRL">Austin</span>
-                    <div
-                      width="8"
-                      class="sc-tYoTV rcpjK"
-                      aria-label="Green status indicator"
-                    ></div>
-                  </div>
-                </div>
+                      <div class="sc-biBrSq rrVpB">
+                        <span
+                          class="sc-GTWni dHVACP sc-eHfQar hhRQON"
+                          height="50px"
+                          width="50px"
+                          aria-hidden="true"
+                        >
+                          <img
+                            src={imageURL + item.photo}
+                            className="guestimg"
+                          />
+                        </span>
+                        <span class="sc-hzMMCg kKpKzb">
+                          <small>{item.userName}</small>
+                        </span>
+                        <span class="sc-crrsfI iDhzRL">{item.userName}</span>
+                        <div
+                          width="8"
+                          class="sc-tYoTV rcpjK"
+                          aria-label="Green status indicator"
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* {data?.guests?.map((item))} */}
               </div>
             </div>
             {/* lounge persons END */}
@@ -364,82 +483,90 @@ function Join_lounge() {
               </div>
               <div className="vote-fav">
                 <small>Vote for your favorite icebreakers.</small>
-                {data?.icebreakers?.map((item,index)=>{
+                {data?.icebreakers?.map((item, index) => {
                   return (
                     <div class="icebreaker-vote">
-                <div className="vote-tag">
-                    <p > {item.name}</p>
-                </div>
-                <div class="sc-BXqHe bwSTre">
-                {item?.downVotes?.includes(JSON.parse(localStorage.getItem('user'))?._id) ? (
-                  <button class="sc-bTRMAZ disableunlike"  disabled >
-                    <svg
-                      width="17"
-                      height="15"
-                      viewBox="0 0 17 15"
-                      fill="none"
-                      aria-label="Down vote"
-                    >
-                      <path
-                        d="M17 0L13.9091 -2.70216e-07L13.9091 9L17 9L17 0ZM5.90104e-07 8.25C5.1798e-07 9.075 0.695456 9.75 1.54546 9.75L6.42136 9.75L5.68727 13.1775L5.66409 13.4175C5.66409 13.725 5.79546 14.01 6.00409 14.2125L6.82318 15L11.9077 10.0575C12.1936 9.7875 12.3636 9.4125 12.3636 9L12.3636 1.5C12.3636 0.675001 11.6682 -4.66122e-07 10.8182 -5.40432e-07L3.86364 -1.14842e-06C3.22227 -1.20449e-06 2.67364 0.375 2.44182 0.915L0.108182 6.2025C0.0386379 6.375 7.38285e-07 6.555 7.21238e-07 6.75L5.90104e-07 8.25Z"
-                        fill="white"
-                      ></path>
-                    </svg>
-                  </button>
-                ):(
-                  <button class="sc-bTRMAZ kGehDO" onClick={()=>icebreakerVote(false,index)} >
-                    <svg
-                      width="17"
-                      height="15"
-                      viewBox="0 0 17 15"
-                      fill="none"
-                      aria-label="Down vote"
-                    >
-                      <path
-                        d="M17 0L13.9091 -2.70216e-07L13.9091 9L17 9L17 0ZM5.90104e-07 8.25C5.1798e-07 9.075 0.695456 9.75 1.54546 9.75L6.42136 9.75L5.68727 13.1775L5.66409 13.4175C5.66409 13.725 5.79546 14.01 6.00409 14.2125L6.82318 15L11.9077 10.0575C12.1936 9.7875 12.3636 9.4125 12.3636 9L12.3636 1.5C12.3636 0.675001 11.6682 -4.66122e-07 10.8182 -5.40432e-07L3.86364 -1.14842e-06C3.22227 -1.20449e-06 2.67364 0.375 2.44182 0.915L0.108182 6.2025C0.0386379 6.375 7.38285e-07 6.555 7.21238e-07 6.75L5.90104e-07 8.25Z"
-                        fill="white"
-                      ></path>
-                    </svg>
-                  </button>
-                )}
-                {item?.upVotes?.includes(JSON.parse(localStorage.getItem('user'))?._id) ? (
-                  <button class="sc-fTABeZ disablelike"  disabled>
-                    <svg
-                      width="17"
-                      height="15"
-                      viewBox="0 0 17 15"
-                      fill="none"
-                      aria-label="Up vote"
-                    >
-                      <path
-                        d="M0 15H3.09091L3.09091 6H0L0 15ZM17 6.75C17 5.925 16.3045 5.25 15.4545 5.25L10.5786 5.25L11.3127 1.8225L11.3359 1.5825C11.3359 1.275 11.2045 0.99 10.9959 0.7875L10.1768 0L5.09227 4.9425C4.80636 5.2125 4.63636 5.5875 4.63636 6L4.63636 13.5C4.63636 14.325 5.33182 15 6.18182 15L13.1364 15C13.7777 15 14.3264 14.625 14.5582 14.085L16.8918 8.7975C16.9614 8.625 17 8.445 17 8.25V6.75Z"
-                        fill="white"
-                      ></path>
-                    </svg>
-                  </button>
-):(
-  <button class="sc-fTABeZ hsqAaa" onClick={()=>icebreakerVote(true,index)}>
-                    <svg
-                      width="17"
-                      height="15"
-                      viewBox="0 0 17 15"
-                      fill="none"
-                      aria-label="Up vote"
-                    >
-                      <path
-                        d="M0 15H3.09091L3.09091 6H0L0 15ZM17 6.75C17 5.925 16.3045 5.25 15.4545 5.25L10.5786 5.25L11.3127 1.8225L11.3359 1.5825C11.3359 1.275 11.2045 0.99 10.9959 0.7875L10.1768 0L5.09227 4.9425C4.80636 5.2125 4.63636 5.5875 4.63636 6L4.63636 13.5C4.63636 14.325 5.33182 15 6.18182 15L13.1364 15C13.7777 15 14.3264 14.625 14.5582 14.085L16.8918 8.7975C16.9614 8.625 17 8.445 17 8.25V6.75Z"
-                        fill="white"
-                      ></path>
-                    </svg>
-                  </button>
-)}
-                 
-                 
-                </div>
-                </div>
-                  )
+                      <div className="vote-tag">
+                        <p> {item.name}</p>
+                      </div>
+                      <div class="sc-BXqHe bwSTre">
+                        {item?.downVotes?.includes(
+                          JSON.parse(localStorage.getItem("user"))?._id
+                        ) ? (
+                          <button class="sc-bTRMAZ disableunlike" disabled>
+                            <svg
+                              width="17"
+                              height="15"
+                              viewBox="0 0 17 15"
+                              fill="none"
+                              aria-label="Down vote"
+                            >
+                              <path
+                                d="M17 0L13.9091 -2.70216e-07L13.9091 9L17 9L17 0ZM5.90104e-07 8.25C5.1798e-07 9.075 0.695456 9.75 1.54546 9.75L6.42136 9.75L5.68727 13.1775L5.66409 13.4175C5.66409 13.725 5.79546 14.01 6.00409 14.2125L6.82318 15L11.9077 10.0575C12.1936 9.7875 12.3636 9.4125 12.3636 9L12.3636 1.5C12.3636 0.675001 11.6682 -4.66122e-07 10.8182 -5.40432e-07L3.86364 -1.14842e-06C3.22227 -1.20449e-06 2.67364 0.375 2.44182 0.915L0.108182 6.2025C0.0386379 6.375 7.38285e-07 6.555 7.21238e-07 6.75L5.90104e-07 8.25Z"
+                                fill="white"
+                              ></path>
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            class="sc-bTRMAZ kGehDO"
+                            onClick={() => icebreakerVote(false, index)}
+                          >
+                            <svg
+                              width="17"
+                              height="15"
+                              viewBox="0 0 17 15"
+                              fill="none"
+                              aria-label="Down vote"
+                            >
+                              <path
+                                d="M17 0L13.9091 -2.70216e-07L13.9091 9L17 9L17 0ZM5.90104e-07 8.25C5.1798e-07 9.075 0.695456 9.75 1.54546 9.75L6.42136 9.75L5.68727 13.1775L5.66409 13.4175C5.66409 13.725 5.79546 14.01 6.00409 14.2125L6.82318 15L11.9077 10.0575C12.1936 9.7875 12.3636 9.4125 12.3636 9L12.3636 1.5C12.3636 0.675001 11.6682 -4.66122e-07 10.8182 -5.40432e-07L3.86364 -1.14842e-06C3.22227 -1.20449e-06 2.67364 0.375 2.44182 0.915L0.108182 6.2025C0.0386379 6.375 7.38285e-07 6.555 7.21238e-07 6.75L5.90104e-07 8.25Z"
+                                fill="white"
+                              ></path>
+                            </svg>
+                          </button>
+                        )}
+                        {item?.upVotes?.includes(
+                          JSON.parse(localStorage.getItem("user"))?._id
+                        ) ? (
+                          <button class="sc-fTABeZ disablelike" disabled>
+                            <svg
+                              width="17"
+                              height="15"
+                              viewBox="0 0 17 15"
+                              fill="none"
+                              aria-label="Up vote"
+                            >
+                              <path
+                                d="M0 15H3.09091L3.09091 6H0L0 15ZM17 6.75C17 5.925 16.3045 5.25 15.4545 5.25L10.5786 5.25L11.3127 1.8225L11.3359 1.5825C11.3359 1.275 11.2045 0.99 10.9959 0.7875L10.1768 0L5.09227 4.9425C4.80636 5.2125 4.63636 5.5875 4.63636 6L4.63636 13.5C4.63636 14.325 5.33182 15 6.18182 15L13.1364 15C13.7777 15 14.3264 14.625 14.5582 14.085L16.8918 8.7975C16.9614 8.625 17 8.445 17 8.25V6.75Z"
+                                fill="white"
+                              ></path>
+                            </svg>
+                          </button>
+                        ) : (
+                          <button
+                            class="sc-fTABeZ hsqAaa"
+                            onClick={() => icebreakerVote(true, index)}
+                          >
+                            <svg
+                              width="17"
+                              height="15"
+                              viewBox="0 0 17 15"
+                              fill="none"
+                              aria-label="Up vote"
+                            >
+                              <path
+                                d="M0 15H3.09091L3.09091 6H0L0 15ZM17 6.75C17 5.925 16.3045 5.25 15.4545 5.25L10.5786 5.25L11.3127 1.8225L11.3359 1.5825C11.3359 1.275 11.2045 0.99 10.9959 0.7875L10.1768 0L5.09227 4.9425C4.80636 5.2125 4.63636 5.5875 4.63636 6L4.63636 13.5C4.63636 14.325 5.33182 15 6.18182 15L13.1364 15C13.7777 15 14.3264 14.625 14.5582 14.085L16.8918 8.7975C16.9614 8.625 17 8.445 17 8.25V6.75Z"
+                                fill="white"
+                              ></path>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
                 })}
-                  {/* <img src={fav_tag} alt="img" /> */}
+                {/* <img src={fav_tag} alt="img" /> */}
               </div>
             </div>
             {/* vote board END */}

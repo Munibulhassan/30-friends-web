@@ -1132,6 +1132,7 @@ span.lightest {
     padding-left: 10px;
     display: flex;
     flex-direction: row;
+    margin-top: 5px;
 }
 .icebreaker-vote p{
     font-size: medium;
@@ -1140,6 +1141,52 @@ span.lightest {
     font-size: 20px;
 padding-top: 10px;
     text-transform: uppercase;
+}
+.error{
+    color:red;
+    border: solid red 2px ;
+}
+.guestimg{
+    height: 50px;
+    width: 50px;
+}
+.statuscolor {
+    height: 10px;
+    width: 10px;
+    margin-top: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 25px;
+    margin-right: 12px;
+  }
+  
+  .jbzmO{
+margin: auto;
+display: block;
+padding: 0 5%;
+overflow: hidden;
+width: auto !important;
+height: auto;
+  }
+  .joinmeeting{
+    color: blue;
+    cursor: pointer;
+  }
+  .await{
+    color: red;
+  }
+  .room p{
+    text-align: center;
+    margin-top: 50%;
+  }
+.room img{
+    padding: 0px;
+width: 150px;
+height: 150px;
+position: relative;
+top: 58px;
+left: 10px;
+
 }
 /* leaderboard end */
 /* join lounge END */
