@@ -24,15 +24,17 @@ function Login() {
 
     const res = await login(userData);
 
-    
     if (res == true) {
       navigate("/User_panel");
     } else {
-      
+      setloading(false);
       const e = document.getElementsByClassName("loginemail");
-      e.setAttribute("class", "error");
+      e[0].setAttribute("class", "loginemail form-control error");
+
       const p = document.getElementsByClassName("loginpassword");
-      p.setAttribute("class", "error");
+      p[0].setAttribute("class", "loginemail form-control error");
+
+      // p.setAttribute("className", "error");
     }
 
     // const header ={headers: {

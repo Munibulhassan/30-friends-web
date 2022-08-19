@@ -15,6 +15,7 @@ import Join_lounge from "./Views/Join_Lounge/Index";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer } from "react-toastify";
+import Joinroom from "./Views/meetingroom";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -39,6 +40,7 @@ root.render(
                 <Route path="/User_panel" element={<User_panel />} />
                 <Route path="/User_info" element={<User_info />} />
                 <Route path="/join_lounge/:id" element={<Join_lounge />} />
+                <Route path="/joinroom" element = {<Joinroom/>}/>
               </Routes>
             </div>
           </Col>

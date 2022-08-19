@@ -1,8 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Container, Row, Col, InputGroup, Form, Button } from "react-bootstrap";
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import { solid, brands } from '@fortawesome/fontawesome-svg-core/import.macro';
-import fav_tag from "../../Assets/fav-tag.PNG";
 import chaticon from "../../Assets/chat.png";
 import hand from "../../Assets/hand.png";
 import Carousel from "carousel-react-rcdev";
@@ -16,13 +13,26 @@ import {
   voteicebreakers,
 } from "../../Action/action";
 import { imageURL } from "../../Action/config";
+
 import { useMeetingManager } from "amazon-chime-sdk-component-library-react";
 import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
+import {
+  MeetingProvider,
+  lightTheme,
+  VideoTileGrid,
+} from "amazon-chime-sdk-component-library-react";
+
 import { ThemeProvider } from "styled-components";
 // import { SdkPrimaryMeetingJoinAckFrame } from "amazon-chime-sdk-js/build/signalingprotocol/SignalingProtocol";
 
 const MyMeetingView = () => {
-  <VideoTileGrid />;
+  return (
+    <ThemeProvider theme={lightTheme}>
+      <MeetingProvider>
+        <VideoTileGrid />
+      </MeetingProvider>
+    </ThemeProvider>
+  );
 };
 function Join_lounge() {
   const location = useLocation();
@@ -34,83 +44,25 @@ function Join_lounge() {
   const [end, setend] = useState("");
   const [timer, setTimer] = useState("00:00");
   const [checkforchat, setcheckforchat] = useState(false);
-
+  const [video, setvideo] = useState(false);
   // const [connectiontime, setconnectiontime] = useState("");
   const Ref = useRef(null);
 
-  useEffect(async () => {
-    const loungedata = await getSinglelounges(location.pathname.split("/")[2]);
-    setdata(loungedata);
-    clearTimer(loungedata?.chatCycle * 60);
+  useEffect(() => {
+    async function getlounge() {
+      const loungedata = await getSinglelounges(
+        location.pathname.split("/")[2]
+      );
+      setdata(loungedata);
+    }
+    getlounge();
+
+    // clearTimer(loungedata?.chatCycle * 60);
   }, []);
 
-  const getTimeRemaining = (e) => {
-    const total = Date.parse(e) - Date.parse(new Date());
-
-    const seconds = Math.floor((total / 1000) % 60);
-    const minutes = Math.floor((total / 1000 / 60) % 60);
-    const hours = Math.floor((total / 1000 / 60 / 60) % 24);
-    return {
-      total,
-      hours,
-      minutes,
-      seconds,
-    };
-  };
-
-  const startTimer = async (e) => {
-    let { total, hours, minutes, seconds } = getTimeRemaining(e);
-    if (total >= 0) {
-      setTimer(
-        (hours > 9 ? hours : "0" + hours) +
-          ":" +
-          (minutes > 9 ? minutes : "0" + minutes) +
-          ":" +
-          (seconds > 9 ? seconds : "0" + seconds)
-      );
-    }
-  };
-  const clearTimer = (e) => {
-    // If you adjust it you should also need to
-    // adjust the Endtime formula we are about
-    // to code next
-    if (e != undefined) {
-      const hour = e > 60 ? parseInt(e / 60) : "00";
-
-      const minute = e < 60 ? e : e - parseInt(e / 60) * 60;
-      const second = "00";
-
-      setTimer(hour + ":" + minute + ":" + second);
-
-      // If you try to remove this line the
-      // updating of timer Variable will be
-      // after 1000ms or 1sec
-      // if (Ref.current) clearInterval(Ref.current);
-      const id = setInterval(() => {
-        startTimer(e);
-      }, 1000);
-      Ref.current = id;
-    }
-  };
-
-  const getDeadTime = () => {
-    let deadline = new Date();
-
-    // This is where you need to adjust if
-    // you entend to add more time
-    deadline.setSeconds(deadline.getSeconds() + 10);
-    return deadline;
-  };
-
-  // We can use useEffect so that when the component
-  // mount the timer will start as soon as possible
-
-  // We put empty array to act as componentDid
-  // mount only
-
+ 
   useEffect(() => {
     const d = new Date(data?.scheduling.scheduleDate.split("T")[0]);
-
     setdate(data?.scheduling.scheduleDate.split("T")[0].split("-")[2]);
     const months = [
       "January",
@@ -147,13 +99,38 @@ function Join_lounge() {
     const connection = new Date(
       currentDate?.getTime() + data?.chatCycle * 60000
     );
-
-    console.log(data);
     // setconnectiontime(connection.getHours() +":"+connection.getMinutes() )
-
     // setconnectiontime(JSON.stringify(connection)?.split("T")[1]?.slice(0, 5));
   }, [data]);
 
+  const chatjoin = async (id) => {
+
+    const result = await joinchat(id);
+console.log(result)
+    if(result.statusCode == 404 || result.statusCode == 400){
+      alert(result.message)
+    }else{
+if(result.Meeting){
+
+  const meetingManager = useMeetingManager();
+  // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
+  const meetingSessionConfiguration = new MeetingSessionConfiguration(
+    result.Meeting.meeting,
+    result.Meeting.attendee
+  );
+  await meetingManager.join(meetingSessionConfiguration);
+  await meetingManager.start();
+  setvideo(true);
+
+}
+      // result?.lounge?.rooms?.map(async (item) => {
+      //   if (item.status == "open") {
+      //   }
+      // });
+    }
+
+
+  };
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
 
@@ -176,26 +153,7 @@ function Join_lounge() {
 
     setdata(value);
   };
-  const meetingjoin = async (id) => {
-    // const meetingManager = useMeetingManager();
-    const res = await joinmeeting(
-      JSON.parse(localStorage.getItem("user"))?._id,
-      id
-    );
-    const data = await res.json();
-    const meetingSessionConfiguration = new MeetingSessionConfiguration(
-      data.Meeting,
-      data.Attendee
-    );
 
-    // Create a `MeetingSession` using `join()` function with the `MeetingSessionConfiguration`
-    await meetingManager.join(meetingSessionConfiguration);
-
-    // Start the `MeetingSession` to join the meeting
-    await meetingManager.start();
-
-    MyMeetingView();
-  };
   return (
     <section className="join-lounge">
       <Container>
@@ -333,7 +291,7 @@ function Join_lounge() {
                     class="sc-eCssSg cgGnME sc-jXktwP hdiogm"
                     color="blue"
                     onClick={() => {
-                      joinchat(data?._id);
+                      chatjoin(data?._id);
                     }}
                   >
                     Join next chat
@@ -394,7 +352,7 @@ function Join_lounge() {
                 <span class="sc-jtHMlw fzYzV">
                   <span class="sc-fubCfw dQkfXx sc-fXvjs endHJt">
                     <span title="1 Guest" class="sc-pFZIQ fxgwrR">
-                      1
+                      {data?.guests?.length}
                     </span>
                   </span>{" "}
                   In the lounge
@@ -438,6 +396,7 @@ function Join_lounge() {
                 {/* {data?.guests?.map((item))} */}
               </div>
             </div>
+
             {/* lounge persons END */}
 
             {/* info tags  */}
@@ -638,6 +597,16 @@ function Join_lounge() {
           </Col>
         </Row>
       </Container>
+      {video ? (
+        <Container>
+          <Row>
+            <Col md={12}>
+              <p>Meeting Start</p>
+              <MyMeetingView />
+            </Col>
+          </Row>
+        </Container>
+      ) : null}
     </section>
   );
 }

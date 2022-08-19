@@ -11,17 +11,17 @@ import {
 
 function App() {
   return (
-    <ThemeProvider theme={lightTheme}>
-    <MeetingProvider>
       
     <section className='main'>
 
     <Container>
+    <ThemeProvider theme={lightTheme}>
+    <MeetingProvider>
    <Get_started />
-    </Container>
-    </section>
     </MeetingProvider>
   </ThemeProvider>
+    </Container>
+    </section>
   );
 }
 

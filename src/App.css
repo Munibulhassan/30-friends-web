@@ -1143,8 +1143,8 @@ padding-top: 10px;
     text-transform: uppercase;
 }
 .error{
-    color:red;
-    border: solid red 2px ;
+    color:red !important;
+    border: solid red 2px !important ;
 }
 .guestimg{
     height: 50px;
@@ -1186,6 +1186,52 @@ height: 150px;
 position: relative;
 top: 58px;
 left: 10px;
+
+}
+.conversationlist{
+    border: 2px solid black;
+padding: 5% 5% 0 5%;
+overflow: scroll;
+height: 100vh;
+}
+.roomimg{
+    position: absolute;
+}
+.conversationlist .room p
+{
+    text-align: center;
+    margin-top: 12%;
+    margin-left: 20%;
+    width: max-content;
+    width: 100%;
+
+
+}
+.conversationlist .room  img{
+    width: 70px;
+    height: 70px;
+    position: relative;
+    top: 10px;
+}
+.conversationlist .room{
+    height: max-content;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.roominfo{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+.conversationlist .room:hover{
+    background-color: #878d935c;
+}
+.conversationlist .room .status{
+    margin-top: 12%;
+    margin-left: 0%;
+    width: 100%;
+
 
 }
 /* leaderboard end */

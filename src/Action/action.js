@@ -63,7 +63,6 @@ export const getIntroduction = async (status, page) => {
 ///icebreakers
 export const voteicebreakers = async (id, status) => {
   try {
-    
     const data = {
       id: id,
       vote: status,
@@ -79,10 +78,8 @@ export const voteicebreakers = async (id, status) => {
       `${baseURL}/icebreakers/vote`,
       JSON.stringify(data),
       header
-      );
+    );
 
-      
-    
     return response.data;
   } catch (err) {
     return err.message;
@@ -223,7 +220,6 @@ export const createbulkintroduction = async (data) => {
 ///Lounges
 export const getAlllounges = async (page) => {
   try {
-    
     const header = {
       headers: {
         Authorization:
@@ -274,12 +270,8 @@ export const joinchat = async (id) => {
       { lounge: id },
       header
     );
-    
-    if (response.data._id) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return response.data;
   } catch (err) {
     return err.message;
   }
@@ -450,7 +442,7 @@ export const createAdmin = async (data) => {
     return err.message;
   }
 };
-export const joinmeeting =async(user_id,id)=>{
+export const joinmeeting = async (user_id, id) => {
   const header = {
     headers: {
       Authorization:
@@ -459,14 +451,37 @@ export const joinmeeting =async(user_id,id)=>{
     "Content-Type": "application/json",
   };
 
-  const response = await axios.post(`${baseURL}/chime/join`,JOSN.stringify({
-    "meetingId":id,
-    "userId":user_id
-  }), header);
-  console.log(response)
-  return response
+  const response = await axios.post(
+    `${baseURL}/chime/join`,
+    JOSN.stringify({
+      meetingId: id,
+      userId: user_id,
+    }),
+    header
+  );
+  
+  return response.data;
+};
+// export const createmeeting = async (user_id, id) => {
+//   const header = {
+//     headers: {
+//       Authorization:
+//         "Bearer " + JSON.parse(localStorage.getItem("AccessToken")),
+//     },
+//     "Content-Type": "application/json",
+//   };
 
-}
+//   const response = await axios.post(
+//     `${baseURL}/chime/join`,
+//     JOSN.stringify({
+//       meetingId: id,
+//       userId: user_id,
+//     }),
+//     header
+//   );
+//   console.log(response);
+//   return response;
+// };
 export const logout = async () => {
   const header = {
     headers: {
