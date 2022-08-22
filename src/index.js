@@ -3,7 +3,6 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Header from "./Extends/Header";
 import reportWebVitals from "./reportWebVitals";
 import { Col, Container, Row } from "react-bootstrap";
@@ -40,7 +39,7 @@ root.render(
                 <Route path="/User_panel" element={<User_panel />} />
                 <Route path="/User_info" element={<User_info />} />
                 <Route path="/join_lounge/:id" element={<Join_lounge />} />
-                <Route path="/joinroom" element = {<Joinroom/>}/>
+                {/* <Route path="/joinroom" element = {<Joinroom/>}/> */}
               </Routes>
             </div>
           </Col>

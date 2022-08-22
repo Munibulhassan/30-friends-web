@@ -22,6 +22,7 @@ function User_panel() {
       })
     );
   };
+  console.log(sortedlounges)
   useEffect(() => {
     getLounges();
   }, []);
@@ -222,5 +223,4 @@ function User_panel() {
     </section>
   );
 }
-
 export default User_panel;

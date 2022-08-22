@@ -14,7 +14,10 @@ import {
 } from "../../Action/action";
 import { imageURL } from "../../Action/config";
 
-import { useMeetingManager } from "amazon-chime-sdk-component-library-react";
+import {
+  useMeetingManager,
+  MeetingManager,
+} from "amazon-chime-sdk-component-library-react";
 import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
 import {
   MeetingProvider,
@@ -42,7 +45,9 @@ function Join_lounge() {
   const [month, setmonth] = useState("");
   const [start, setstart] = useState("");
   const [end, setend] = useState("");
-  const [timer, setTimer] = useState("00:00");
+  const [minute, setminute] = useState();
+  const [second, setsecond] = useState();
+
   const [checkforchat, setcheckforchat] = useState(false);
   const [video, setvideo] = useState(false);
   // const [connectiontime, setconnectiontime] = useState("");
@@ -56,11 +61,8 @@ function Join_lounge() {
       setdata(loungedata);
     }
     getlounge();
-
-    // clearTimer(loungedata?.chatCycle * 60);
   }, []);
 
- 
   useEffect(() => {
     const d = new Date(data?.scheduling.scheduleDate.split("T")[0]);
     setdate(data?.scheduling.scheduleDate.split("T")[0].split("-")[2]);
@@ -99,43 +101,57 @@ function Join_lounge() {
     const connection = new Date(
       currentDate?.getTime() + data?.chatCycle * 60000
     );
-    // setconnectiontime(connection.getHours() +":"+connection.getMinutes() )
-    // setconnectiontime(JSON.stringify(connection)?.split("T")[1]?.slice(0, 5));
+
+    setminute(data?.chatCycle);
+
+    setsecond(0);
   }, [data]);
+  const myinterval = setInterval(() => counter(minute, second), 1000);
 
+  function counter(a, b) {
+    if (a > 0) {
+      if (b == 0) {
+        setminute(a - 1);
+        setsecond(59);
+      } else {
+        setsecond(b - 1);
+      }
+    } else {
+    }
+    clearInterval(myinterval);
+  }
+
+  // useEffect(()=>{
+  // },[second])
+
+  const meetingManager = new MeetingManager();
   const chatjoin = async (id) => {
-
     const result = await joinchat(id);
-console.log(result)
-    if(result.statusCode == 404 || result.statusCode == 400){
-      alert(result.message)
-    }else{
-if(result.Meeting){
 
-  const meetingManager = useMeetingManager();
-  // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
-  const meetingSessionConfiguration = new MeetingSessionConfiguration(
-    result.Meeting.meeting,
-    result.Meeting.attendee
-  );
-  await meetingManager.join(meetingSessionConfiguration);
-  await meetingManager.start();
-  setvideo(true);
-
-}
+    if (result.statusCode == 404 || result.statusCode == 400) {
+      alert(result.message);
+    } else {
+      if (result.Meeting) {
+        // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
+        const meetingSessionConfiguration = new MeetingSessionConfiguration(
+          result.Meeting.meeting,
+          result.Meeting.attendee
+        );
+        await meetingManager.join(meetingSessionConfiguration);
+        await meetingManager.start();
+        setvideo(true);
+      }
       // result?.lounge?.rooms?.map(async (item) => {
       //   if (item.status == "open") {
       //   }
       // });
     }
-
-
   };
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
 
     const value = data;
-    const res = await voteicebreakers(data._id, status);
+    const res = await voteicebreakers(data.icebreakers[index]?._id, status);
 
     if (status == true) {
       value?.icebreakers[index].upVotes.push(user);
@@ -274,7 +290,10 @@ if(result.Meeting){
                         next connection:
                       </p>
                       <div class="sc-XhUPp kiNLFp">
-                        {timer}
+                        {(minute > 9 ? minute : "0" + minute) +
+                          ":" +
+                          (second > 9 ? second : "0" + second)}
+
                         <span class="sc-ikPAkQ ceimHt">
                           {/* 4<span class="sc-crrsfI iDhzRL"> minutes and</span>
                           <span aria-hidden="true">:</span>48
@@ -325,9 +344,9 @@ if(result.Meeting){
                           ></span>
                           <span
                             className="joinmeeting"
-                            onClick={() => {
-                              meetingjoin(id);
-                            }}
+                            // onClick={() => {
+                            //   meetingjoin(id);
+                            // }}
                           >
                             join room
                           </span>

@@ -33,8 +33,8 @@ const Joinroom = () => {
     
     joiningchatandmeeting()
   }, []);
+  const meetingManager = useMeetingManager();
   const meetingjoin = async (id) => {
-    const meetingManager = useMeetingManager();
     const res = await joinchat(id);
     console.log(id);
 

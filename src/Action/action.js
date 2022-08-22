@@ -453,7 +453,7 @@ export const joinmeeting = async (user_id, id) => {
 
   const response = await axios.post(
     `${baseURL}/chime/join`,
-    JOSN.stringify({
+    JSON.stringify({
       meetingId: id,
       userId: user_id,
     }),
