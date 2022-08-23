@@ -8,6 +8,7 @@ import {
   MeetingProvider,
   lightTheme,
 } from 'amazon-chime-sdk-component-library-react';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
     <section className='main'>
 
     <Container>
+
     <ThemeProvider theme={lightTheme}>
     <MeetingProvider>
    <Get_started />

@@ -10,33 +10,26 @@ import {
   getSinglelounges,
   joinchat,
   joinmeeting,
+  leavechat,
   voteicebreakers,
 } from "../../Action/action";
 import { imageURL } from "../../Action/config";
+import { MeetingManager } from "amazon-chime-sdk-component-library-react";
+import * as Chime from "amazon-chime-sdk-js";
+import { toast } from "react-toastify";
 
-import {
-  useMeetingManager,
-  MeetingManager,
-} from "amazon-chime-sdk-component-library-react";
-import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
-import {
-  MeetingProvider,
-  lightTheme,
-  VideoTileGrid,
-} from "amazon-chime-sdk-component-library-react";
+// import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
+// import {
+//   MeetingProvider,
+//   lightTheme,
+//   VideoTileGrid,
+// } from "amazon-chime-sdk-component-library-react";
 
-import { ThemeProvider } from "styled-components";
+// import { ThemeProvider } from "styled-components";
+// import Meeting from "../amzon sdk/amazon";
+// import VideoCall from "../videocall/VideoCall";
 // import { SdkPrimaryMeetingJoinAckFrame } from "amazon-chime-sdk-js/build/signalingprotocol/SignalingProtocol";
 
-const MyMeetingView = () => {
-  return (
-    <ThemeProvider theme={lightTheme}>
-      <MeetingProvider>
-        <VideoTileGrid />
-      </MeetingProvider>
-    </ThemeProvider>
-  );
-};
 function Join_lounge() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,11 +40,14 @@ function Join_lounge() {
   const [end, setend] = useState("");
   const [minute, setminute] = useState();
   const [second, setsecond] = useState();
+  const [meetingResponse, setMeetingResponse] = useState();
+  const [attendeeResponse, setAttendeeResponse] = useState();
+  // const [callCreated, setCallCreated] = useState(false);
+  const videoElement = useRef();
 
   const [checkforchat, setcheckforchat] = useState(false);
-  const [video, setvideo] = useState(false);
+  const [videocontent, setvideocontent] = useState(false);
   // const [connectiontime, setconnectiontime] = useState("");
-  const Ref = useRef(null);
 
   useEffect(() => {
     async function getlounge() {
@@ -64,8 +60,8 @@ function Join_lounge() {
   }, []);
 
   useEffect(() => {
-    const d = new Date(data?.scheduling.scheduleDate.split("T")[0]);
-    setdate(data?.scheduling.scheduleDate.split("T")[0].split("-")[2]);
+    const d = new Date(data?.scheduling?.scheduleDate?.split("T")[0]);
+    setdate(data?.scheduling?.scheduleDate?.split("T")[0].split("-")[2]);
     const months = [
       "January",
       "February",
@@ -103,16 +99,14 @@ function Join_lounge() {
     );
 
     setminute(data?.chatCycle);
-    
-
 
     setsecond(0);
   }, [data]);
+
   const myinterval = setInterval(() => counter(minute, second), 1000);
 
   function counter(a, b) {
     if (a >= 1) {
-      
       if (b == 0) {
         setminute(a - 1);
         setsecond(59);
@@ -120,61 +114,81 @@ function Join_lounge() {
         setsecond(b - 1);
       }
     } else {
-      console.log(a,b,"==")
-
-      if(b>0){
+      if (b > 0) {
         setsecond(b - 1);
-
       }
     }
     clearInterval(myinterval);
   }
 
-  // useEffect(()=>{
-  // },[second])
+  // const meetingManager = new MeetingManager();
 
-  const meetingManager = new MeetingManager();
-  const chatjoin = async (id) => {
-    
-    data?.rooms?.map(async (item)=>{
-      if(item.meeting==null){
-        alert("No any active room available")
-      }else{
+  const meetingjoin = async (id) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
 
-        const result = await joinmeeting(user,item.meeeting._id);
-    const meetingSessionConfiguration = new MeetingSessionConfiguration(
-          result.meeting,
-          result.attendee
-        );
-        await meetingManager.join(meetingSessionConfiguration);
-        await meetingManager.start();
-        console.log(meetingManager,"====")
-        setvideo(true);
-
-        
-  }
-})
-
-    // if (result.statusCode == 404 || result.statusCode == 400) {
-    //   alert(result.message);
-    // } else {
-    //   if (result.Meeting) {
-    //     // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
-    //     const meetingSessionConfiguration = new MeetingSessionConfiguration(
-    //       result.meeting,
-    //       result.attendee
-    //     );
-    //     await meetingManager.join(meetingSessionConfiguration);
-    //     await meetingManager.start();
-    //     setvideo(true);
-    //   }
-    //   // result?.lounge?.rooms?.map(async (item) => {
-    //   //   if (item.status == "open") {
-    //   //   }
-    //   // });
-    // }
+    const res = await joinmeeting({ userId: user, meetingId: id });
+    console.log(res);
+    if (res.statusCode == 404) {
+      console.log(res);
+      toast.error(res.message);
+    } else {
+      toast.success(res.message);
+      setMeetingResponse(res.Meeting.meeting);
+      setAttendeeResponse(res.Meeting.attendee);
+      setvideocontent(true)
+      joinVideoCall();
+    }
   };
+
+  const chatjoin = async () => {
+    const res = await joinchat(data._id);
+    if (res.statusCode == 404) {
+      console.log(res);
+      toast.error(res.message);
+    } else {
+      toast.success(res.message);
+    }
+    meetingjoin("c06a2277-0efe-4c81-bdc5-495f67ba0706");
+  };
+
+  const joinVideoCall = async () => {
+    const logger = new Chime.ConsoleLogger(
+      "ChimeMeetingLogs",
+      Chime.LogLevel.INFO
+    );
+    const deviceController = new Chime.DefaultDeviceController(logger);
+    const configuration = new Chime.MeetingSessionConfiguration(
+      meetingResponse,
+      attendeeResponse
+    );
+    const meetingSession = new Chime.DefaultMeetingSession(
+      configuration,
+      logger,
+      deviceController
+    );
+
+    const observer = {
+      audioVideoDidStart: () => {
+        meetingSession.audioVideo.startLocalVideoTile();
+      },
+      videoTileDidUpdate: (tileState) => {
+        meetingSession.audioVideo.bindVideoElement(
+          tileState.tileId,
+          videoElement.current
+        );
+      },
+    };
+
+    meetingSession.audioVideo.addObserver(observer);
+    console.log(await meetingSession.audioVideo.listVideoInputDevices());
+    const firstVideoDeviceId = (
+      await meetingSession.audioVideo.listVideoInputDevices()
+    )[0]?.deviceId;
+    meetingSession.audioVideo.startLocalVideoTile();
+    await meetingSession.audioVideo.chooseVideoInputDevice(firstVideoDeviceId);
+    meetingSession.audioVideo.start();
+  };
+
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
 
@@ -212,7 +226,7 @@ function Join_lounge() {
           <Col md={8}>
             <div
               className="lounge-dash eElQyU"
-              style={{ backgroundImage: `url(imageURL+ data?.banner )` }}
+              style={{ backgroundImage: "url(imageURL+ data?.banner )" }}
             >
               <div class="sc-gVgnHT bfDGHw">
                 <div class="sc-iqHYGH hSaKRS sc-fWPcDo cgpajZ">
@@ -279,7 +293,29 @@ function Join_lounge() {
                     <button
                       class="sc-eCssSg bnCIin sc-irlOZD jUdyne"
                       color="red"
-                      onClick={() => navigate("/User_panel")}
+                      onClick={() => {
+                        const user = JSON.parse(
+                          localStorage.getItem("user")
+                        )._id;
+
+                        data.rooms
+                          .filter((item) => {
+                            return item.status == "open";
+                          })
+                          .map((value) => {
+                            value.guests
+                              .filter((item) => {
+                                return item._id == user;
+                              })
+                              .map(async (meetingdata) => {
+                                const res = await leavechat(
+                                  data._id,
+                                  value._id
+                                );
+                              });
+                          });
+                        navigate("/User_panel");
+                      }}
                     >
                       Leave Lounge
                     </button>
@@ -338,7 +374,7 @@ function Join_lounge() {
                     class="sc-eCssSg cgGnME sc-jXktwP hdiogm"
                     color="blue"
                     onClick={() => {
-                      chatjoin(data?._id);
+                      chatjoin();
                     }}
                   >
                     Join next chat
@@ -372,9 +408,9 @@ function Join_lounge() {
                           ></span>
                           <span
                             className="joinmeeting"
-                            // onClick={() => {
-                            //   meetingjoin(id);
-                            // }}
+                            onClick={() => {
+                              meetingjoin(item.meeting.MeetingId);
+                            }}
                           >
                             join room
                           </span>
@@ -644,12 +680,11 @@ function Join_lounge() {
           </Col>
         </Row>
       </Container>
-      {video ? (
+      {videocontent ? (
         <Container>
           <Row>
             <Col md={12}>
-              <p>Meeting Start</p>
-              <MyMeetingView />
+              <video ref={videoElement}></video>
             </Col>
           </Row>
         </Container>

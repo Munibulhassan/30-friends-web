@@ -277,7 +277,7 @@ export const joinchat = async (id) => {
   }
 };
 
-export const leavechat = async (id) => {
+export const leavechat = async (id,roomId) => {
   try {
     const header = {
       headers: {
@@ -286,16 +286,12 @@ export const leavechat = async (id) => {
       },
     };
     const response = await axios.post(
-      `${baseURL}/lounges/joinChat`,
-      { lounge: id },
+      `${baseURL}/lounges/leaveChat`,
+      { lounge: id,room:roomId },
       header
     );
+return response.data
 
-    if (response.data._id) {
-      return true;
-    } else {
-      return false;
-    }
   } catch (err) {
     return err.message;
   }
@@ -442,7 +438,7 @@ export const createAdmin = async (data) => {
     return err.message;
   }
 };
-export const joinmeeting = async (user_id, id) => {
+export const joinmeeting = async (data) => {
   const header = {
     headers: {
       Authorization:
@@ -453,10 +449,7 @@ export const joinmeeting = async (user_id, id) => {
 
   const response = await axios.post(
     `${baseURL}/chime/join`,
-    JSON.stringify({
-      meetingId: id,
-      userId: user_id,
-    }),
+    data,
     header
   );
   
