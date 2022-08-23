@@ -103,13 +103,16 @@ function Join_lounge() {
     );
 
     setminute(data?.chatCycle);
+    
+
 
     setsecond(0);
   }, [data]);
   const myinterval = setInterval(() => counter(minute, second), 1000);
 
   function counter(a, b) {
-    if (a > 0) {
+    if (a >= 1) {
+      
       if (b == 0) {
         setminute(a - 1);
         setsecond(59);
@@ -117,6 +120,12 @@ function Join_lounge() {
         setsecond(b - 1);
       }
     } else {
+      console.log(a,b,"==")
+
+      if(b>0){
+        setsecond(b - 1);
+
+      }
     }
     clearInterval(myinterval);
   }
@@ -126,26 +135,45 @@ function Join_lounge() {
 
   const meetingManager = new MeetingManager();
   const chatjoin = async (id) => {
-    const result = await joinchat(id);
+    
+    data?.rooms?.map(async (item)=>{
+      if(item.meeting==null){
+        alert("No any active room available")
+      }else{
+    const user = JSON.parse(localStorage.getItem("user"))._id;
 
-    if (result.statusCode == 404 || result.statusCode == 400) {
-      alert(result.message);
-    } else {
-      if (result.Meeting) {
-        // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
-        const meetingSessionConfiguration = new MeetingSessionConfiguration(
-          result.Meeting.meeting,
-          result.Meeting.attendee
+        const result = await joinmeeting(user,item.meeeting._id);
+    const meetingSessionConfiguration = new MeetingSessionConfiguration(
+          result.meeting,
+          result.attendee
         );
         await meetingManager.join(meetingSessionConfiguration);
         await meetingManager.start();
+        console.log(meetingManager,"====")
         setvideo(true);
-      }
-      // result?.lounge?.rooms?.map(async (item) => {
-      //   if (item.status == "open") {
-      //   }
-      // });
-    }
+
+        
+  }
+})
+
+    // if (result.statusCode == 404 || result.statusCode == 400) {
+    //   alert(result.message);
+    // } else {
+    //   if (result.Meeting) {
+    //     // const meetingdata = await joinmeeting(user, item.Meeting.meeting.MeetingId);
+    //     const meetingSessionConfiguration = new MeetingSessionConfiguration(
+    //       result.meeting,
+    //       result.attendee
+    //     );
+    //     await meetingManager.join(meetingSessionConfiguration);
+    //     await meetingManager.start();
+    //     setvideo(true);
+    //   }
+    //   // result?.lounge?.rooms?.map(async (item) => {
+    //   //   if (item.status == "open") {
+    //   //   }
+    //   // });
+    // }
   };
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
