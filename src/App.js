@@ -7,6 +7,7 @@ import { ThemeProvider } from "styled-components";
 import {
   MeetingProvider,
   lightTheme,
+  FeaturedVideoTileProvider,
 } from "amazon-chime-sdk-component-library-react";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -16,7 +17,10 @@ function App() {
       <Container>
         <ThemeProvider theme={lightTheme}>
           <MeetingProvider>
+            <FeaturedVideoTileProvider>
+
             <Get_started />
+            </FeaturedVideoTileProvider>
           </MeetingProvider>
         </ThemeProvider>
       </Container>

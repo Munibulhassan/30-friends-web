@@ -14,23 +14,22 @@ import {
   voteicebreakers,
 } from "../../Action/action";
 import { imageURL } from "../../Action/config";
-import { useMeetingManager, MeetingProvider, VideoTileGrid,useToggleLocalMute  } from "amazon-chime-sdk-component-library-react";
+import {
+  useMeetingManager,
+  MeetingProvider,
+  VideoTileGrid,
+  useToggleLocalMute,
+  ControlBar,
+  ControlBarButton,
+  Phone,
+  Sound,
+  Dialer,
+  Camera,
+  Microphone,
+  Laptop,
+} from "amazon-chime-sdk-component-library-react";
 import * as Chime from "amazon-chime-sdk-js";
 import { toast } from "react-toastify";
-
-// import { MeetingSessionConfiguration } from 'amazon-chime-sdk-js';
-
-// import { MeetingSessionConfiguration } from "amazon-chime-sdk-js";
-// import {
-//   MeetingProvider,
-//   lightTheme,
-//   VideoTileGrid,
-// } from "amazon-chime-sdk-component-library-react";
-
-// import { ThemeProvider } from "styled-components";
-// import Meeting from "../amzon sdk/amazon";
-// import VideoCall from "../videocall/VideoCall";
-// import { SdkPrimaryMeetingJoinAckFrame } from "amazon-chime-sdk-js/build/signalingprotocol/SignalingProtocol";
 
 function Join_lounge() {
   const location = useLocation();
@@ -42,9 +41,69 @@ function Join_lounge() {
   const [end, setend] = useState("");
   const [minute, setminute] = useState();
   const [second, setsecond] = useState();
+
   const [meetingResponse, setMeetingResponse] = useState();
   const [attendeeResponse, setAttendeeResponse] = useState();
-  const { muted, toggleMute } = useToggleLocalMute();
+
+  const [muted, setMuted] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  ////
+  const microphoneButtonProps = {
+    icon: muted ? <Microphone muted /> : <Microphone />,
+    onClick: () => setMuted(!muted),
+    label: 'Mute'
+  };
+  
+  const cameraButtonProps = {
+    icon: cameraActive ? <Camera /> : <Camera disabled />,
+    popOver: [
+      {
+        onClick: () => console.log('camera popover option 1'),
+        children: <span>Some option text</span>
+      },
+      {
+        onClick: () => console.log('camera popover option 2'),
+        children: <span>More option text</span>
+      }
+    ],
+    onClick: () => setCameraActive(!cameraActive),
+    label: 'Camera'
+  };
+  
+  const dialButtonProps = {
+    icon: <Dialer />,
+    onClick: () => console.log('Toggle dial pad'),
+    label: 'Dial'
+  };
+  
+  const hangUpButtonProps = {
+    icon: <Phone />,
+    onClick: () => console.log('End meeting'),
+    label: 'End'
+  };
+  
+  const volumeButtonProps = {
+    icon: <Sound />,
+    onClick: () => console.log('Volume button clicked'),
+    popOver: [
+      {
+        onClick: () => console.log('volume popover option 1'),
+        children: <span>Some option text</span>
+      },
+      {
+        onClick: () => console.log('volume popover option 2'),
+        children: <span>More option text</span>
+      }
+    ],
+    label: 'Volume'
+  };
+  
+  const laptopButtonProps = {
+    icon: <Laptop />,
+    onClick: () => console.log('Screen button clicked'),
+    label: 'Screen'
+  };
+  ////
   // const [callCreated, setCallCreated] = useState(false);
   const videoElement = useRef();
 
@@ -54,12 +113,12 @@ function Join_lounge() {
   useEffect(() => {
     if (videocontent == true) {
       var next = document.getElementById("next");
-      console.log(next);
+
       next = next?.querySelector("img");
       next.alt = next.alt ? "Next" : "";
 
       var prev = document.getElementById("prev");
-      console.log(prev);
+
       prev = prev?.querySelector("img");
       prev.alt = prev.alt ? "Provious" : "";
     }
@@ -140,13 +199,13 @@ function Join_lounge() {
   // const meetingManager = new MeetingManager();
 
   // const meetingManager = useMeetingManager();
+
   const meetingjoin = async (id) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
 
     const res = await joinmeeting({ userId: user, meetingId: id });
 
-    if (res.statusCode == 404) {
-      console.log(res);
+    if (res.statusCode == 404 || res.statusCode == 400) {
       toast.error(res?.message);
     } else {
       toast.success(res?.message);
@@ -154,7 +213,7 @@ function Join_lounge() {
       setAttendeeResponse(res?.attendee);
       setvideocontent(true);
       // joinVideoCall();
-      console.log(res);
+
       const logger = new Chime.ConsoleLogger(
         "ChimeMeetingLogs",
         Chime.LogLevel.INFO
@@ -174,7 +233,16 @@ function Join_lounge() {
         audioVideoDidStart: () => {
           meetingSession.audioVideo.startLocalVideoTile();
         },
+
         videoTileDidUpdate: (tileState) => {
+          console.log(tileState);
+          // Ignore a tile without attendee ID and other attendee's tile.
+          if (!tileState.boundAttendeeId || !tileState.localTile) {
+            return;
+          }
+
+          // videoTileDidUpdate is also invoked when you call startLocalVideoTile or tileState changes.
+
           meetingSession.audioVideo.bindVideoElement(
             tileState.tileId,
             videoElement.current
@@ -182,75 +250,58 @@ function Join_lounge() {
         },
       };
 
+      // const firstVideoDeviceId = (
+      //   await meetingSession.audioVideo.listVideoInputDevices()
+      // )[0].deviceId;
+      // await meetingSession.audioVideo.chooseVideoInputDevice(
+      //   firstVideoDeviceId
+      // );
+      // if(muted){
+      //   toggleMute();
+      // }
+      // const firstAudioDeviceId = (
+      //   await meetingSession.audioVideo.listAudioInputDevices()
+      // )[0].deviceId;
+      // await meetingSession.audioVideo.chooseAudioInputDevice(
+      //   firstAudioDeviceId
+      // );
+      meetingSession.audioVideo.setDeviceLabelTrigger(
+        async () =>
+          await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true,
+          })
+      );
+      const audioInputDevices =
+        await meetingSession.audioVideo.listAudioInputDevices();
+      const audioOutputDevices =
+        await meetingSession.audioVideo.listAudioOutputDevices();
+      const videoInputDevices =
+        await meetingSession.audioVideo.listVideoInputDevices();
+      await meetingSession.audioVideo.startAudioInput(
+        audioInputDevices[0].deviceId
+      );
+      await meetingSession.audioVideo.chooseAudioOutput(
+        audioOutputDevices[0].deviceId
+      );
+      await meetingSession.audioVideo.startVideoInput(
+        videoInputDevices[0].deviceId
+      );
       meetingSession.audioVideo.addObserver(observer);
-      const audioInputDevices = (
-        await meetingSession.audioVideo.listAudioInputDevices()
-      )[0].deviceId;
-      const audioOutputDevices = (
-        await meetingSession.audioVideo.listAudioOutputDevices()
-      )[0].deviceId;
-      const videoInputDevices = (
-        await meetingSession.audioVideo.listVideoInputDevices()
-      )[0].deviceId;
-
-      // const firstVideoDeviceId = (await meetingSession.audioVideo.listVideoInputDevices())[0].deviceId;
-      //       await meetingSession.audioVideo.chooseVideoInputDevice(firstVideoDeviceId);
-      await meetingSession.audioVideo.startAudioInput(audioInputDevices);
-      await meetingSession.audioVideo.chooseAudioOutput(audioOutputDevices);
-      await meetingSession.audioVideo.startVideoInput(videoInputDevices);
       meetingSession.audioVideo.start();
     }
   };
 
   const chatjoin = async () => {
     const res = await joinchat(data._id);
-    console.log(res);
-    if (res.statusCode == 404) {
-      console.log(res);
+
+    if (res.statusCode == 404 || res.statusCode == 400) {
       toast.error(res.message);
     } else {
       toast.success(res.message);
     }
     // meetingjoin("c06a2277-0efe-4c81-bdc5-495f67ba0706");
   };
-
-  // const joinVideoCall = async () => {
-  //   const logger = new Chime.ConsoleLogger(
-  //     "ChimeMeetingLogs",
-  //     Chime.LogLevel.INFO
-  //   );
-  //   const deviceController = new Chime.DefaultDeviceController(logger);
-  //   const configuration = new Chime.MeetingSessionConfiguration(
-  //     meetingResponse,
-  //     attendeeResponse
-  //   );
-  //   const meetingSession = new Chime.DefaultMeetingSession(
-  //     configuration,
-  //     logger,
-  //     deviceController
-  //   );
-
-  //   const observer = {
-  //     audioVideoDidStart: () => {
-  //       meetingSession.audioVideo.startLocalVideoTile();
-  //     },
-  //     videoTileDidUpdate: (tileState) => {
-  //       meetingSession.audioVideo.bindVideoElement(
-  //         tileState.tileId,
-  //         videoElement.current
-  //       );
-  //     },
-  //   };
-
-  //   meetingSession.audioVideo.addObserver(observer);
-  //   console.log(await meetingSession.audioVideo.listVideoInputDevices());
-  //   const firstVideoDeviceId = (
-  //     await meetingSession.audioVideo.listVideoInputDevices()
-  //   )[0]?.deviceId;
-  //   meetingSession.audioVideo.startLocalVideoTile();
-  //   await meetingSession.audioVideo.chooseVideoInputDevice(firstVideoDeviceId);
-  //   meetingSession.audioVideo.start();
-  // };
 
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
@@ -751,13 +802,19 @@ function Join_lounge() {
           <Row>
             <Col md={12}>
               <video ref={videoElement}></video>
-               {/* <VideoTileGrid  ref={videoElement}></VideoTileGrid > */}
-               <button onClick={toggleMute}>
-      {muted ? 'Unmute myself' : 'Mute myself'}
-    </button>
-              {/* <MeetingProvider meetingManager={meetingManager}>
-              
-              </MeetingProvider> */}
+              <ControlBar showLabels layout="left">
+                <ControlBarButton {...microphoneButtonProps} />
+                <ControlBarButton {...volumeButtonProps} />
+                <ControlBarButton {...cameraButtonProps} />
+                <ControlBarButton {...dialButtonProps} />
+                <ControlBarButton {...laptopButtonProps} />
+                <ControlBarButton {...hangUpButtonProps} />
+              </ControlBar>
+
+              {/* <VideoTileGrid  ref={videoElement}></VideoTileGrid > */}
+              {/* <button onClick={()=>toggleMute()}>
+                {muted ? "Unmute myself" : "Mute myself"}
+              </button> */}
             </Col>
           </Row>
         </Container>
