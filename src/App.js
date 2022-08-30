@@ -15,14 +15,10 @@ function App() {
   return (
     <section className="main">
       <Container>
-        <ThemeProvider theme={lightTheme}>
-          <MeetingProvider>
-            <FeaturedVideoTileProvider>
-
+    
             <Get_started />
-            </FeaturedVideoTileProvider>
-          </MeetingProvider>
-        </ThemeProvider>
+           
+        
       </Container>
     </section>
   );

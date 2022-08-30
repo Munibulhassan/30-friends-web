@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Toast } from "bootstrap";
+import { toast } from "react-toastify";
 import { baseURL } from "./config.js";
 
 //user
@@ -228,7 +229,7 @@ export const getAlllounges = async (page) => {
     };
 
     const response = await axios.get(
-      `${baseURL}/lounges?page=${page}&limit=10`,
+      `${baseURL}/lounges?page=${page}&limit=10&status=active`,
       header,
       {}
     );
@@ -270,10 +271,14 @@ export const joinchat = async (id) => {
       { lounge: id },
       header
     );
+    
 
     return response.data;
   } catch (err) {
-    return err.message;
+    
+    return err.response.data
+    
+
   }
 };
 

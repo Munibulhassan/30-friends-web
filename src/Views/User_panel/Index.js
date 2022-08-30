@@ -9,7 +9,6 @@ import { imageURL } from "../../Action/config";
 function User_panel() {
   const [lounges, setlounges] = useState([]);
   const [sortedlounges, setsortedlounges] = useState([]);
-
   const getLounges = async () => {
     const data = await getAlllounges(1);
 
