@@ -295,6 +295,8 @@ function Join_lounge() {
       await meetingSession.audioVideo.startVideoInput(
         videoInputDevices[0]?.deviceId
       );
+      const audio = document.getElementById("audioelement")
+             meetingSession.audioVideo.bindAudioElement(audio);
       meetingSession.audioVideo.addObserver(observer);
       meetingSession.audioVideo.start();
       meetingSession.audioVideo.startLocalVideoTile();
@@ -813,6 +815,8 @@ function Join_lounge() {
               </>  
               )
              })}
+             
+             <audio id="audioelement"></audio>
               {/* <MeetingProvider ThemeProvider= {lightTheme}>
                 <VideoTileGrid  layout="standard"></VideoTileGrid>
               </MeetingProvider> */}
