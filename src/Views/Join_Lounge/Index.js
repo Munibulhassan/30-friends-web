@@ -4,62 +4,28 @@ import chaticon from "../../Assets/chat.png";
 import hand from "../../Assets/hand.png";
 import Carousel from "carousel-react-rcdev";
 import tf_ad from "../../Assets/tf-ad.png";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import image from "../../Assets/default.png";
+import nexticon from "../../Assets/next.png";
 import {
   getSinglelounges,
   joinchat,
-  joinmeeting,
   leavechat,
   voteicebreakers,
 } from "../../Action/action";
 import { imageURL } from "../../Action/config";
-import {
-  useMeetingManager,
-  MeetingProvider,
-  VideoTileGrid,
-  useToggleLocalMute,
-  ControlBar,
-  ControlBarButton,
-  Phone,
-  Sound,
-  Dialer,
-  Camera,
-  Microphone,
-  Laptop,
-  lightTheme,
-  RemoteVideos,
-  LocalVideo,
-  useRemoteVideoTileState,
-  useLocalVideo,
-  VideoGrid,
-  RemoteVideoTileProvider,
-} from "amazon-chime-sdk-component-library-react";
 import * as Chime from "amazon-chime-sdk-js";
 import { toast } from "react-toastify";
-import { ThemeProvider } from "styled-components";
-
-const fluidStyles = `
-  height: 100%;
-  width: 100%;
-`;
-
-const staticStyles = `
-  display: flex;
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  width: 20vw;
-  max-height: 30vh;
-  height: auto;
-
-  video {
-    position: static;
-  }
-`;
+import mikeon from "../../Assets/mikeon.png";
+import mikeoff from "../../Assets/mikeoff.png";
+import camera from "../../Assets/video-camera.png";
+import nocamera from "../../Assets/no-video.png";
 function Join_lounge() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [audio, setaudio] = useState([true, true, true, true, true, true]);
+  const [video, setvideo] = useState([true, true, true, true, true, true]);
+
   const [data, setdata] = useState();
   const [date, setdate] = useState("");
   const [month, setmonth] = useState("");
@@ -67,42 +33,30 @@ function Join_lounge() {
   const [end, setend] = useState("");
   const [minute, setminute] = useState();
   const [second, setsecond] = useState();
-
-
-  const [muted, setMuted] = useState(false);
-  const [cameraActive, setCameraActive] = useState(false);
-  ////
- 
-  ////
-  // const [callCreated, setCallCreated] = useState(false);
-  const videoElement = useRef();
-  const videoElements = document.getElementsByClassName("video")
-
+  const videoElements = document.getElementsByClassName("video");
   const [checkforchat, setcheckforchat] = useState(false);
-  const [videocontent, setvideocontent] = useState(false);
-  // const [connectiontime, setconnectiontime] = useState("");
-  // useEffect(() => {
-  //   if (videocontent == true) {
-  //     var next = document.getElementById("next");
+  const [videocontent, setvideocontent] = useState(true);
 
-  //     next = next?.querySelector("img");
-  //     next.alt = next.alt ? "Next" : "";
-
-  //     var prev = document.getElementById("prev");
-
-  //     prev = prev?.querySelector("img");
-  //     prev.alt = prev.alt ? "Provious" : "";
-  //   }
-  // }, [videocontent]);
- 
-  
   useEffect(() => {
-    async function getlounge() {
-      const loungedata = await getSinglelounges(
-        location.pathname.split("/")[2]
-      );
-      setdata(loungedata);
+    if (checkforchat == true) {
+      var next = document.getElementById("next");
+      next = next?.querySelector("img");
+      next.alt = "Next";
+      next.src = nexticon;
+
+      var prev = document.getElementById("prev");
+      prev = prev?.querySelector("img");
+      prev.alt = "Previous";
+      prev.src = nexticon;
+      prev.setAttribute("class", "previmg");
     }
+  }, [checkforchat]);
+
+  async function getlounge() {
+    const loungedata = await getSinglelounges(location.pathname.split("/")[2]);
+    setdata(loungedata);
+  }
+  useEffect(() => {
     getlounge();
   }, []);
 
@@ -125,8 +79,8 @@ function Join_lounge() {
     ];
 
     setmonth(months[d.getMonth()]);
-    let start = new Date(data?.scheduling.startAt);
-    let end = new Date(data?.scheduling.endAt);
+    let start = new Date(data?.scheduling?.startAt);
+    let end = new Date(data?.scheduling?.endAt);
 
     setstart(
       (start.getHours() < 12 ? start.getHours() : start.getHours() - 12) +
@@ -168,32 +122,28 @@ function Join_lounge() {
     clearInterval(myinterval);
   }
 
-  // const meetingManager = new MeetingManager();
-
-  // const meetingManager = useMeetingManager();
   const indexMap = {};
 
-  const acquireVideoElement = tileId => {
+  const acquireVideoElement = (tileId) => {
     // Return the same video element if already bound.
     for (let i = 0; i < 25; i += 1) {
       if (indexMap[i] === tileId) {
-        console.log(videoElements[i])
         return videoElements[i];
       }
     }
+
     // Return the next available video element.
     for (let i = 0; i < 6; i += 1) {
       if (!indexMap.hasOwnProperty(i)) {
         indexMap[i] = tileId;
-        console.log(videoElements[i])
 
         return videoElements[i];
       }
     }
-    throw new Error('no video element is available');
+    throw new Error("no video element is available");
   };
-  
-  const releaseVideoElement = tileId => {
+
+  const releaseVideoElement = (tileId) => {
     for (let i = 0; i < 6; i += 1) {
       if (indexMap[i] === tileId) {
         delete indexMap[i];
@@ -201,20 +151,17 @@ function Join_lounge() {
       }
     }
   };
- 
+  
+
   const meetingjoin = async (id) => {
- 
-
     const res = await joinchat(data._id);
-
+    getlounge();
     if (res?.statusCode == 404 || res?.statusCode == 400) {
       toast.error(res?.message);
     } else {
       toast.success(res?.message);
-      // setMeetingResponse(res?.meeting);
-      // setAttendeeResponse(res?.attendee);
       setvideocontent(true);
-      // joinVideoCall();
+
       const logger = new Chime.ConsoleLogger("SDK", Chime.LogLevel.DEBUG);
       const deviceController = new Chime.DefaultDeviceController(logger);
       const configuration = new Chime.MeetingSessionConfiguration(
@@ -231,55 +178,21 @@ function Join_lounge() {
         audioVideoDidStart: () => {
           meetingSession.audioVideo.start();
         },
-       
-        // remoteVideoSourcesDidChange: videoSources => {
-        //   videoSources.forEach(videoSource => {
-        //     const { attendee } = videoSource;
-        //     console.log(`An attendee (${attendee.attendeeId} ${attendee.externalUserId}) is sending video ==============================================================================`);
-        //   });
-        // },
+
         videoTileDidUpdate: (tileState) => {
-          console.log(tileState);
           meetingSession.audioVideo.bindVideoElement(
             tileState.tileId,
             acquireVideoElement(tileState.tileId)
           );
-          // Ignore a tile without attendee ID and other attendee's tile.
-          if (!tileState.boundAttendeeId || !tileState.localTile) {
-            // return;
-          }
-
-          // videoTileDidUpdate is also invoked when you call startLocalVideoTile or tileState changes.
-
-         
         },
-        videoTileWasRemoved: tileId => {
+        videoTileWasRemoved: (tileId) => {
           releaseVideoElement(tileId);
-        }
+        },
+        audioVideoDidStop: () => {
+          meetingSession.audioVideo.stopLocalVideoTile();
+        },
       };
 
-      // const firstVideoDeviceId = (
-      //   await meetingSession.audioVideo.listVideoInputDevices()
-      // )[0].deviceId;
-      // await meetingSession.audioVideo.chooseVideoInputDevice(
-      //   firstVideoDeviceId
-      // );
-      // if(muted){
-      //   toggleMute();
-      // }
-      // const firstAudioDeviceId = (
-      //   await meetingSession.audioVideo.listAudioInputDevices()
-      // )[0].deviceId;
-      // await meetingSession.audioVideo.chooseAudioInputDevice(
-      //   firstAudioDeviceId
-      // // );
-      // meetingSession.audioVideo.setDeviceLabelTrigger(
-      //   async () =>
-      //     await navigator.mediaDevices.getUserMedia({
-      //       audio: true,
-      //       video: true,
-      //     })
-      // );
       const audioInputDevices =
         await meetingSession.audioVideo.listAudioInputDevices();
       const audioOutputDevices =
@@ -295,24 +208,19 @@ function Join_lounge() {
       await meetingSession.audioVideo.startVideoInput(
         videoInputDevices[0]?.deviceId
       );
-      const audio = document.getElementById("audioelement")
-             meetingSession.audioVideo.bindAudioElement(audio);
+if(audio){
+      const audio = document.getElementById("audioelement");
+      meetingSession.audioVideo.bindAudioElement(audio);}
+
       meetingSession.audioVideo.addObserver(observer);
       meetingSession.audioVideo.start();
       meetingSession.audioVideo.startLocalVideoTile();
-
-
     }
   };
-
- 
-
   const icebreakerVote = async (status, index) => {
     const user = JSON.parse(localStorage.getItem("user"))._id;
-
     const value = data;
     const res = await voteicebreakers(data.icebreakers[index]?._id, status);
-
     if (status == true) {
       value?.icebreakers[index].upVotes.push(user);
       value?.icebreakers[index].downVotes.splice(
@@ -326,7 +234,6 @@ function Join_lounge() {
       );
       value?.icebreakers[index]?.downVotes?.push(user);
     }
-
     setdata(value);
   };
 
@@ -412,7 +319,6 @@ function Join_lounge() {
                       class="sc-eCssSg bnCIin sc-irlOZD jUdyne"
                       color="red"
                       onClick={() => {
-                        
                         if (data.status == "active") {
                           const user = JSON.parse(
                             localStorage.getItem("user")
@@ -432,16 +338,19 @@ function Join_lounge() {
                                     data?._id,
                                     value?._id
                                   );
+                                  setdata(res);
                                 });
                             });
                         }
-                        navigate("/User_panel");
+                        getlounge();
+                        setvideocontent(false);
                       }}
                     >
                       Leave Lounge
                     </button>
                   </div>
                 </div>
+
                 <p class="sc-dlfnbm fkJzdG">Computer Science Mixer</p>
                 <span class="sc-crrsfI iDhzRL">Computer Science Mixer</span>
               </div>
@@ -479,11 +388,7 @@ function Join_lounge() {
                           ":" +
                           (second > 9 ? second : "0" + second)}
 
-                        <span class="sc-ikPAkQ ceimHt">
-                          {/* 4<span class="sc-crrsfI iDhzRL"> minutes and</span>
-                          <span aria-hidden="true">:</span>48
-                          <span class="sc-crrsfI iDhzRL"> seconds</span> */}
-                        </span>
+                        <span class="sc-ikPAkQ ceimHt"></span>
                       </div>
                     </div>
                   </div>
@@ -495,8 +400,7 @@ function Join_lounge() {
                     class="sc-eCssSg cgGnME sc-jXktwP hdiogm"
                     color="blue"
                     onClick={() => {
-                      
-                      meetingjoin()
+                      meetingjoin();
                     }}
                   >
                     Join next chat
@@ -511,6 +415,7 @@ function Join_lounge() {
                 </div>
               </div>
             </div>
+
             {checkforchat ? (
               <Carousel>
                 {data?.rooms?.map((item) => {
@@ -531,7 +436,7 @@ function Join_lounge() {
                           <span
                             className="joinmeeting"
                             onClick={() => {
-                              // meetingjoin(item.meeting.MeetingId);
+                              meetingjoin();
                             }}
                           >
                             join room
@@ -598,13 +503,8 @@ function Join_lounge() {
                     </div>
                   );
                 })}
-                {/* {data?.guests?.map((item))} */}
               </div>
             </div>
-
-            {/* lounge persons END */}
-
-            {/* info tags  */}
           </Col>
           <Col md={4}>
             {/* vote board  */}
@@ -730,7 +630,6 @@ function Join_lounge() {
                     </div>
                   );
                 })}
-                {/* <img src={fav_tag} alt="img" /> */}
               </div>
             </div>
             {/* vote board END */}
@@ -802,25 +701,43 @@ function Join_lounge() {
           </Col>
         </Row>
       </Container>
+
       {videocontent ? (
         <Container>
           <Row>
             <Col md={12}>
-             {[1,2,3,4,5,6].map((item,index)=>{
-              return(
-              <>
-              <p>Munib</p>
-                <video className="video" 
-              ></video>
-              </>  
-              )
-             })}
-             
-             <audio id="audioelement"></audio>
-              {/* <MeetingProvider ThemeProvider= {lightTheme}>
-                <VideoTileGrid  layout="standard"></VideoTileGrid>
-              </MeetingProvider> */}
+              <div>
+                {[1, 2, 3, 4, 5, 6].map((item, index) => {
+                  return (
+                    <>
+                      <video className="video"></video>
+                      <span className="controlbar">
+                        <img
+                          src={audio[index] ? mikeon : mikeoff}
+                          onClick={() => {
+                            const temp = [...audio];
+                            temp[index] = !temp[index];
+                            setaudio(temp);
+                          }}
+                          className="videocontroller"
+                        />
 
+                        <img
+                          src={video[index] ? camera : nocamera}
+                          onClick={() => {
+                            const temp = [...video];
+                            temp[index] = !temp[index];
+                            setvideo(temp);
+                          }}
+                          className="videocontroller"
+                        />
+                      </span>
+                    </>
+                  );
+                })}
+              </div>
+
+              <audio id="audioelement"></audio>
             </Col>
           </Row>
         </Container>

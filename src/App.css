@@ -1231,8 +1231,29 @@ height: 100vh;
     margin-top: 12%;
     margin-left: 0%;
     width: 100%;
-
-
+}
+#next img , #prev img{
+    width: 40px;
+    height: 40px;
+}
+.previmg{
+    transform: rotate(180deg);
+}
+.video{
+    
+    margin-left: 10px;
+    margin-top: 10px;
+    width: 40%;
+    border: #000 2px solid;
+}
+.videocontroller{
+    width: 30px;
+    height: 30px;
+}
+.controlbar{
+    position: relative;
+    right: 75px;
+    top: -30px;
 }
 /* leaderboard end */
 /* join lounge END */
