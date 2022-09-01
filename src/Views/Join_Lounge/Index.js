@@ -35,8 +35,15 @@ function Join_lounge() {
   const [second, setsecond] = useState();
   const videoElements = document.getElementsByClassName("video");
   const [checkforchat, setcheckforchat] = useState(false);
-  const [videocontent, setvideocontent] = useState(true);
-
+  const [videocontent, setvideocontent] = useState(false);
+  const [controlbar, setcontrolbar] = useState([
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+    "none",
+  ]);
   useEffect(() => {
     if (checkforchat == true) {
       var next = document.getElementById("next");
@@ -136,7 +143,9 @@ function Join_lounge() {
     for (let i = 0; i < 6; i += 1) {
       if (!indexMap.hasOwnProperty(i)) {
         indexMap[i] = tileId;
-
+        let temp = [...controlbar];
+        temp[i] = "initial";
+        setcontrolbar(temp);
         return videoElements[i];
       }
     }
@@ -707,11 +716,11 @@ if(audio){
           <Row>
             <Col md={12}>
               <div>
-                {[1, 2, 3, 4, 5, 6].map((item, index) => {
+                {controlbar.map((item, index) => {
                   return (
                     <>
                       <video className="video"></video>
-                      <span className="controlbar">
+                      <span className="controlbar" style={{ display: item }}>
                         <img
                           src={audio[index] ? mikeon : mikeoff}
                           onClick={() => {
