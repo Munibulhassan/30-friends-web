@@ -1,0 +1,76 @@
+.started-head { padding: 5px 0px 5px 30px; }
+
+@media screen and (max-width: 1600px) {
+    section.login-sec { width: 500px; }
+  }
+
+  @media screen and (max-width: 1440px) {
+    
+}
+
+@media screen and (max-width: 1366px) {
+   
+}
+
+@media screen and (max-width: 1280px) {
+   
+}
+
+@media screen and (max-width: 1024px) {
+    .started-head { padding: 15px 15px 10px 30px; }
+    .started-head h2 { font-size: 2em; }
+    .lounge-session { min-width: 410px; }
+    .communities-content { min-width: 350px; }
+    .icebreaker-vote p { font-size: 15px; }
+}
+
+@media screen and (max-width: 767px) {
+    .started-head { margin: 0px 20px 20px 0px; }
+    .dTqEqv { height: 20vh; }
+    .lounge-session { min-width: 350px; }
+    .icebreaker-vote { border: #000 2px solid; border-radius: 10px; padding-left: 10px; display: flex; margin-top: 5px; align-content: stretch; justify-content: space-between; }
+    .video { width: 400px; }
+}
+
+@media screen and (max-width: 768px) {
+    .started-head h2 { font-size: 1.4em; }
+    .lounge-session { min-width: 350px; }
+    .dTqEqv { height: 20vh; }
+    .join-lounge .col-md-8 { width: 100%; padding: 20px 60px 0px 60px; }
+    .join-lounge .col-md-4 { width: 100%; padding: 0px 60px 0px 60px; }
+    .icebreaker-vote { display: flex; align-content: stretch; justify-content: space-between; }
+    .video { width: 80%; margin-left: 30px; }
+    
+}
+
+@media screen and (max-width: 500px){
+    .video { width: 70%; margin-left: 50px; }
+}
+
+
+@media screen and (max-width: 480px) {
+    .started-head { padding: 20px 15px 10px 30px; }
+    .lounge-session { min-width: 240px; }
+    .dTqEqv { min-height: 240px; }
+    .communities-content { min-width: 240px; }
+    .tutorial-btn { text-align: center; padding-bottom: 20px; }
+    .join-lounge .col-md-8 { width: 100%; padding: 20px 30px 0px 30px; }
+    .video { width: 70%; margin-left: 45px; }
+}
+
+@media screen and (max-width: 425px){
+    .video { width: 70%; margin-left: 25px; }
+}
+
+
+@media screen and (max-width: 375px) {
+    .bwSTre { display: grid; }
+    .join-lounge .col-md-4 { width: 100%; padding: 0px 30px 0px 30px; }
+    .video { width: 100%; margin-left: 5px; }
+    .controlbar { position: relative; right: -173px; top: -52px; }
+   
+}
+
+@media screen and (max-width: 320px) {
+   
+}

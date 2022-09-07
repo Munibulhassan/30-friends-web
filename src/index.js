@@ -29,7 +29,7 @@ root.render(
               <Header />
             </header>
           </Col>
-          <Col xs={10} md={10} lg={10}>
+          <Col xs={12} md={12} lg={12}>
             <div className="site-content">
               {/* <App /> */}
               <Routes>

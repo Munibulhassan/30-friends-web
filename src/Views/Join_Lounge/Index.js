@@ -20,6 +20,11 @@ import mikeon from "../../Assets/mikeon.png";
 import mikeoff from "../../Assets/mikeoff.png";
 import camera from "../../Assets/video-camera.png";
 import nocamera from "../../Assets/no-video.png";
+import {
+  LocalVideo,
+  MeetingProvider,
+  useLocalVideo,
+} from "amazon-chime-sdk-component-library-react";
 function Join_lounge() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -133,8 +138,11 @@ function Join_lounge() {
 
   const acquireVideoElement = (tileId) => {
     // Return the same video element if already bound.
-    for (let i = 0; i < 25; i += 1) {
+    for (let i = 0; i < 6; i += 1) {
       if (indexMap[i] === tileId) {
+        let temp = [...controlbar];
+        temp[i] = "initial";
+        setcontrolbar(temp);
         return videoElements[i];
       }
     }
@@ -143,9 +151,7 @@ function Join_lounge() {
     for (let i = 0; i < 6; i += 1) {
       if (!indexMap.hasOwnProperty(i)) {
         indexMap[i] = tileId;
-        let temp = [...controlbar];
-        temp[i] = "initial";
-        setcontrolbar(temp);
+
         return videoElements[i];
       }
     }
@@ -156,11 +162,13 @@ function Join_lounge() {
     for (let i = 0; i < 6; i += 1) {
       if (indexMap[i] === tileId) {
         delete indexMap[i];
+        let temp = [...controlbar];
+        temp[i] = "none";
+        setcontrolbar(temp);
         return;
       }
     }
   };
-  
 
   const meetingjoin = async (id) => {
     const res = await joinchat(data._id);
@@ -170,7 +178,7 @@ function Join_lounge() {
     } else {
       toast.success(res?.message);
       setvideocontent(true);
-
+      
       const logger = new Chime.ConsoleLogger("SDK", Chime.LogLevel.DEBUG);
       const deviceController = new Chime.DefaultDeviceController(logger);
       const configuration = new Chime.MeetingSessionConfiguration(
@@ -189,11 +197,13 @@ function Join_lounge() {
         },
 
         videoTileDidUpdate: (tileState) => {
+          console.log(tileState);
           meetingSession.audioVideo.bindVideoElement(
             tileState.tileId,
             acquireVideoElement(tileState.tileId)
           );
         },
+
         videoTileWasRemoved: (tileId) => {
           releaseVideoElement(tileId);
         },
@@ -217,10 +227,10 @@ function Join_lounge() {
       await meetingSession.audioVideo.startVideoInput(
         videoInputDevices[0]?.deviceId
       );
-if(audio){
-      const audio = document.getElementById("audioelement");
-      meetingSession.audioVideo.bindAudioElement(audio);}
-
+      if (audio) {
+        const audio = document.getElementById("audioelement");
+        meetingSession.audioVideo.bindAudioElement(audio);
+     }
       meetingSession.audioVideo.addObserver(observer);
       meetingSession.audioVideo.start();
       meetingSession.audioVideo.startLocalVideoTile();
@@ -245,7 +255,7 @@ if(audio){
     }
     setdata(value);
   };
-
+  const { toggleVideo } = useLocalVideo();
   return (
     <section className="join-lounge">
       <Container>
@@ -347,10 +357,13 @@ if(audio){
                                     data?._id,
                                     value?._id
                                   );
+
                                   setdata(res);
                                 });
                             });
                         }
+                        window.location.reload();
+
                         getlounge();
                         setvideocontent(false);
                       }}
@@ -720,10 +733,15 @@ if(audio){
                   return (
                     <>
                       <video className="video"></video>
+                      <MeetingProvider>
+                        <LocalVideo />
+                        <button onClick={toggleVideo}>Toggle video</button>
+                      </MeetingProvider>
                       <span className="controlbar" style={{ display: item }}>
                         <img
                           src={audio[index] ? mikeon : mikeoff}
                           onClick={() => {
+                            console.log(index);
                             const temp = [...audio];
                             temp[index] = !temp[index];
                             setaudio(temp);
@@ -734,6 +752,9 @@ if(audio){
                         <img
                           src={video[index] ? camera : nocamera}
                           onClick={() => {
+                            const a =
+                              document.getElementsByClassName("video")[index];
+                            console.log(a);
                             const temp = [...video];
                             temp[index] = !temp[index];
                             setvideo(temp);
