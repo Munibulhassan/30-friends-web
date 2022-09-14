@@ -21,10 +21,10 @@ import mikeoff from "../../Assets/mikeoff.png";
 import camera from "../../Assets/video-camera.png";
 import nocamera from "../../Assets/no-video.png";
 import {
-  LocalVideo,
-  MeetingProvider,
-  useLocalVideo,
+  useMeetingManager,
+  useToggleLocalMute
 } from "amazon-chime-sdk-component-library-react";
+
 function Join_lounge() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ function Join_lounge() {
   const [start, setstart] = useState("");
   const [end, setend] = useState("");
   const [minute, setminute] = useState();
+
   const [second, setsecond] = useState();
   const videoElements = document.getElementsByClassName("video");
   const [checkforchat, setcheckforchat] = useState(false);
@@ -138,20 +139,21 @@ function Join_lounge() {
 
   const acquireVideoElement = (tileId) => {
     // Return the same video element if already bound.
-    for (let i = 0; i < 6; i += 1) {
-      if (indexMap[i] === tileId) {
-        let temp = [...controlbar];
-        temp[i] = "initial";
-        setcontrolbar(temp);
-        return videoElements[i];
-      }
-    }
+    // for (let i = 0; i < 6; i += 1) {
+    //   if (indexMap[i] === tileId) {
+    //     return videoElements[i];
+    //   }
+    // }
 
     // Return the next available video element.
     for (let i = 0; i < 6; i += 1) {
       if (!indexMap.hasOwnProperty(i)) {
-        indexMap[i] = tileId;
-
+        console.log(tileId.localTile)
+        if (tileId.localTile) {
+          let temp = [...controlbar];
+          temp[i] = "initial";
+          setcontrolbar(temp);
+        }
         return videoElements[i];
       }
     }
@@ -169,6 +171,7 @@ function Join_lounge() {
       }
     }
   };
+  const meetingManager = useMeetingManager();
 
   const meetingjoin = async (id) => {
     const res = await joinchat(data._id);
@@ -178,13 +181,17 @@ function Join_lounge() {
     } else {
       toast.success(res?.message);
       setvideocontent(true);
-      
+
       const logger = new Chime.ConsoleLogger("SDK", Chime.LogLevel.DEBUG);
       const deviceController = new Chime.DefaultDeviceController(logger);
       const configuration = new Chime.MeetingSessionConfiguration(
         res?.Meeting?.meeting,
         res?.Meeting?.attendee
       );
+
+      // await meetingManager.join(configuration);
+      // await meetingManager.start();
+
       const meetingSession = new Chime.DefaultMeetingSession(
         configuration,
         logger,
@@ -198,10 +205,16 @@ function Join_lounge() {
 
         videoTileDidUpdate: (tileState) => {
           console.log(tileState);
-          meetingSession.audioVideo.bindVideoElement(
-            tileState.tileId,
-            acquireVideoElement(tileState.tileId)
-          );
+          if (!tileState.boundAttendeeId || tileState.isContent) {
+            return;
+          } else {
+            if (tileState.localTile) {
+            }
+            meetingSession.audioVideo.bindVideoElement(
+              tileState.tileId,
+              acquireVideoElement(tileState.tileId)
+            );
+          }
         },
 
         videoTileWasRemoved: (tileId) => {
@@ -230,7 +243,7 @@ function Join_lounge() {
       if (audio) {
         const audio = document.getElementById("audioelement");
         meetingSession.audioVideo.bindAudioElement(audio);
-     }
+      }
       meetingSession.audioVideo.addObserver(observer);
       meetingSession.audioVideo.start();
       meetingSession.audioVideo.startLocalVideoTile();
@@ -255,7 +268,11 @@ function Join_lounge() {
     }
     setdata(value);
   };
-  const { toggleVideo } = useLocalVideo();
+
+  // navigator.mediaDevices.enumerateDevices().then((item) => {
+  //   console.log(item.filter(({ kind }) => kind === "videoinput"));
+  // });
+  const { muted, toggleMute } = useToggleLocalMute();
   return (
     <section className="join-lounge">
       <Container>
@@ -362,7 +379,7 @@ function Join_lounge() {
                                 });
                             });
                         }
-                        window.location.reload();
+                        // window.location.reload();
 
                         getlounge();
                         setvideocontent(false);
@@ -732,12 +749,74 @@ function Join_lounge() {
                 {controlbar.map((item, index) => {
                   return (
                     <>
-                      <video className="video"></video>
-                      <MeetingProvider>
-                        <LocalVideo />
-                        <button onClick={toggleVideo}>Toggle video</button>
-                      </MeetingProvider>
-                      <span className="controlbar" style={{ display: item }}>
+                      <video
+                        className="video"
+                        autoplay=""
+                        controls
+                        style={{ transform: "rotateY(0deg)" }}
+                        muted
+                      ></video>
+
+<button onClick={toggleMute}>
+          {muted ? "Unmute myself" : "Mute myself"}
+        </button>
+{/* <button onClick={async ()=>{
+if(audio[index]){
+  const temp = [...audio]
+  temp[index]=!temp[index]
+  setaudio(temp)
+  await meetingManager.audioVideo?.realtimeMuteLocalAudio();
+}else{
+  const temp = [...audio]
+  temp[index]=!temp[index]
+  setaudio(temp)
+  await meetingManager.audioVideo?.realtimeUnmuteLocalAudio();
+
+}
+
+}}>
+  {audio[index] ?  "muted": "Unmute"}
+
+</button> */}
+                      {/* <button
+                        id="stop-button"
+                        style={{ display: item }}
+                        onClick={async () => {
+                          const a = document.getElementsByClassName("video");
+                          if (video[index]) {
+                            const stream = a[index].srcObject;
+                            const tracks = stream.getTracks();
+                            console.log(tracks);
+                            const track = tracks
+                              .filter((item) => item.kind == "video")[0]
+                              .stop();
+                            const temp = [...video];
+                            temp[index] = !temp[index];
+                            setvideo(temp);
+                          } else {
+                            navigator.mediaDevices
+                              .getUserMedia({
+                                audio: true,
+                                video: true,
+                              })
+                              .then((stream) => {
+                                window.localStream = stream;
+                                a[index].srcObject = stream;
+                              })
+                              .catch((err) => {
+                                console.log(err);
+                              });
+                            const temp = [...video];
+                            temp[index] = !temp[index];
+                            setvideo(temp);
+                          }
+                        }}
+                      >
+                        Stop
+                      </button> */}
+                      {/* <audio class="audioelement" autoplay=""></audio> */}
+
+                      {/* <span className="controlbar">
                         <img
                           src={audio[index] ? mikeon : mikeoff}
                           onClick={() => {
@@ -754,14 +833,71 @@ function Join_lounge() {
                           onClick={() => {
                             const a =
                               document.getElementsByClassName("video")[index];
-                            console.log(a);
+                            const b =
+                              document.getElementsByClassName("audioelement")[index];
+
                             const temp = [...video];
+
+                            if (temp[index]) {
+                              window.localStream.getVideoTracks()[0].stop();
+                              a.src = "";
+
+                              window.localStream.getAudioTracks()[0].stop();
+                              b.src = "";
+                            } else {
+                              navigator.mediaDevices
+                                .getUserMedia({
+                                  audio: true,
+                                  video: true,
+                                })
+                                .then((stream) => {
+                                  window.localStream = stream;
+                                  a.srcObject = stream;
+                                  b.srcObject = stream;
+                                })
+                                .catch((err) => {
+                                  console.log(err);
+                                });
+                            }
                             temp[index] = !temp[index];
                             setvideo(temp);
                           }}
                           className="videocontroller"
                         />
-                      </span>
+                      </span> */}
+
+                      {/* <button id="stop-button" onClick={()=>{
+                        const a = document.getElementsByClassName("video")
+                        const b = document.getElementsByClassName("audioelement")
+
+                        if(!video[index]){
+                          navigator.mediaDevices.getUserMedia({
+                            audio: true,
+                            video: true
+                          })
+                          .then(stream => {
+                            window.localStream = stream;
+                            a[index].srcObject = stream;
+                            b[index].srcObject = stream;
+                          })
+                          .catch((err) => {
+                            console.log(err);
+                          });
+                          const temp = [...video];
+                          temp[index] = !temp[index];
+                          setvideo(temp);
+                          
+                        }else{
+                          window.localStream.getVideoTracks()[0].stop();
+                          a.src = '';
+                          
+                          window.localStream.getAudioTracks()[0].stop();
+                          b.src = '';
+                          const temp = [...video];
+                          temp[index] = !temp[index];
+                          setvideo(temp);
+                        }
+                       }}>Stop</button> */}
                     </>
                   );
                 })}

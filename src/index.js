@@ -15,40 +15,48 @@ import Join_lounge from "./Views/Join_Lounge/Index";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ToastContainer } from "react-toastify";
 import Joinroom from "./Views/meetingroom";
-
+import {
+  lightTheme,
+  MeetingProvider,
+} from "amazon-chime-sdk-component-library-react";
+import { ThemeProvider } from "styled-components";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <BrowserRouter basename="/">
-    <ToastContainer />
+  <ThemeProvider theme={lightTheme}>
+    <MeetingProvider>
+      <BrowserRouter basename="/">
+        <ToastContainer />
 
-    <Container fluid>
-      <div className="site-bg">
-        <Row>
-          <Col xs={2} md={2} lg={2} className="px-0">
-            <header className="pageheader">
-              <Header />
-            </header>
-          </Col>
-          <Col xs={12} md={12} lg={12}>
-            <div className="site-content">
-              {/* <App /> */}
-              <Routes>
-                <Route path="/" element={<App />} />
-                {/* <Route path="/get_started" element={<get_started />} /> */}
-                <Route path="/Login" element={<Login />} />
+        <Container fluid>
+          <div className="site-bg">
+            <Row>
+              <Col xs={2} md={2} lg={2} className="px-0">
+                <header className="pageheader">
+                  <Header />
+                </header>
+              </Col>
+              <Col xs={12} md={12} lg={12}>
+                <div className="site-content">
+                  {/* <App /> */}
+                  <Routes>
+                    <Route path="/" element={<App />} />
+                    {/* <Route path="/get_started" element={<get_started />} /> */}
+                    <Route path="/Login" element={<Login />} />
 
-                <Route path="/Signup" element={<Signup />} />
-                <Route path="/User_panel" element={<User_panel />} />
-                <Route path="/User_info" element={<User_info />} />
-                <Route path="/join_lounge/:id" element={<Join_lounge />} />
-                {/* <Route path="/joinroom" element = {<Joinroom/>}/> */}
-              </Routes>
-            </div>
-          </Col>
-        </Row>
-      </div>
-    </Container>
-  </BrowserRouter>
+                    <Route path="/Signup" element={<Signup />} />
+                    <Route path="/User_panel" element={<User_panel />} />
+                    <Route path="/User_info" element={<User_info />} />
+                    <Route path="/join_lounge/:id" element={<Join_lounge />} />
+                    {/* <Route path="/joinroom" element = {<Joinroom/>}/> */}
+                  </Routes>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        </Container>
+      </BrowserRouter>
+    </MeetingProvider>
+  </ThemeProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
