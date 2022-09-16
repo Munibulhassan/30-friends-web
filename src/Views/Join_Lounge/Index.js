@@ -67,6 +67,7 @@ function Join_lounge() {
 
   async function getlounge() {
     const loungedata = await getSinglelounges(location.pathname.split("/")[2]);
+    console.log(loungedata);
     setdata(loungedata);
   }
   useEffect(() => {
@@ -268,7 +269,7 @@ function Join_lounge() {
     }
     setdata(value);
   };
-
+  // 30Index.js:272 https://thirty-friends.herokuapp.com/api/v1/images/064a4cd7-8e2d-4773-b9b6-a590ebe6c05b.jpg
   // navigator.mediaDevices.enumerateDevices().then((item) => {
   //   console.log(item.filter(({ kind }) => kind === "videoinput"));
   // });
@@ -287,7 +288,7 @@ function Join_lounge() {
           <Col md={8}>
             <div
               className="lounge-dash eElQyU"
-              style={{ backgroundImage: "url(imageURL+ data?.banner )" }}
+              style={{ backgroundImage: `url(${imageURL+data?.banner})` }}
             >
               <div class="sc-gVgnHT bfDGHw">
                 <div class="sc-iqHYGH hSaKRS sc-fWPcDo cgpajZ">
