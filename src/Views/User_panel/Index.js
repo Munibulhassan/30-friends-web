@@ -198,7 +198,7 @@ function User_panel() {
                       onClick={() => {
                         navigate(`/join_lounge/${item._id}`, { state: item });
                       }}
-                      alt="img"
+                      alt="Lounge img"                      
                       className="sc-kfzAmx fTLfYv"
                     />
                     <span
